@@ -482,7 +482,7 @@ int main (int argc, char * argv[])
     
     glutSpecialFunc(SpecialKeyDownFunc);
 
-#ifdef MACOSX
+#ifdef __APPLE__
     GLint sync = 1;
     CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &sync);
 #endif

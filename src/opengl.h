@@ -10,7 +10,11 @@
 #include <GL/glew.h>
 #endif
 
+#ifdef __APPLE__
+#include <OpenGL/OpenGL.h>
+#else
 #include <GL/GL.h>
+#endif
 
 #ifdef _MSC_VER
 #pragma comment(lib, "glew32.lib")

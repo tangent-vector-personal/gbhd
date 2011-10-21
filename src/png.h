@@ -10,6 +10,10 @@
 #include <png.h>
 #pragma comment(lib, "libpng15.lib")
 
+#elif defined(__APPLE__)
+
+#include <libpng/png.h>
+
 #else
 #error "Unknown Compiler/Platform"
 #endif

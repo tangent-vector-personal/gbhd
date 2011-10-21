@@ -7,7 +7,11 @@
 
 #include "opengl.h"
 
+#ifdef __APPLE__
+#include <GLUT/GLUT.h>
+#else
 #include <GL/glut.h>
+#endif
 
 #ifdef _MSC_VER
 //#pragma comment(lib, "glut32.lib")
