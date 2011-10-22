@@ -12,10 +12,17 @@
 		7EBFBD36145273BD00B8A31C /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 7EBFBD34145273BD00B8A31C /* main.m */; };
 		7EBFBD39145273CA00B8A31C /* gbhd-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7EBFBD37145273CA00B8A31C /* gbhd-Info.plist */; };
 		7EBFBD3C145273DF00B8A31C /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7EBFBD3A145273DF00B8A31C /* MainMenu.xib */; };
-		7EBFBD3D145273DF00B8A31C /* gbhd-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7EBFBD37145273CA00B8A31C /* gbhd-Info.plist */; };
 		7EBFBD43145273FB00B8A31C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7EBFBD40145273FB00B8A31C /* InfoPlist.strings */; };
 		7EBFBD4D14527E3F00B8A31C /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EBFBD4C14527E3F00B8A31C /* OpenGL.framework */; };
 		7EE963AC145363E500E00677 /* BasicOpenGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963AB145363E500E00677 /* BasicOpenGLView.m */; };
+		7EE963B31453646200E00677 /* cpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963AE1453646200E00677 /* cpu.cpp */; };
+		7EE963B41453646200E00677 /* gpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963B11453646200E00677 /* gpu.cpp */; };
+		7EE963C21453646F00E00677 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963B51453646F00E00677 /* main.cpp */; };
+		7EE963C31453646F00E00677 /* memory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963B61453646F00E00677 /* memory.cpp */; };
+		7EE963C41453646F00E00677 /* options.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963BA1453646F00E00677 /* options.cpp */; };
+		7EE963C51453646F00E00677 /* pad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963BC1453646F00E00677 /* pad.cpp */; };
+		7EE963C61453646F00E00677 /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963BF1453646F00E00677 /* timer.cpp */; };
+		7EE963C81453666800E00677 /* libpng15.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EE963C71453666800E00677 /* libpng15.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +40,25 @@
 		7EBFBD4C14527E3F00B8A31C /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		7EE963AA145363E500E00677 /* BasicOpenGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BasicOpenGLView.h; path = ../../../src/macosx/BasicOpenGLView.h; sourceTree = "<group>"; };
 		7EE963AB145363E500E00677 /* BasicOpenGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BasicOpenGLView.m; path = ../../../src/macosx/BasicOpenGLView.m; sourceTree = "<group>"; };
+		7EE963AD1453646200E00677 /* cbopcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cbopcodes.h; path = ../../../src/cbopcodes.h; sourceTree = "<group>"; };
+		7EE963AE1453646200E00677 /* cpu.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cpu.cpp; path = ../../../src/cpu.cpp; sourceTree = "<group>"; };
+		7EE963AF1453646200E00677 /* cpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cpu.h; path = ../../../src/cpu.h; sourceTree = "<group>"; };
+		7EE963B11453646200E00677 /* gpu.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gpu.cpp; path = ../../../src/gpu.cpp; sourceTree = "<group>"; };
+		7EE963B21453646200E00677 /* gpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gpu.h; path = ../../../src/gpu.h; sourceTree = "<group>"; };
+		7EE963B51453646F00E00677 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = ../../../src/main.cpp; sourceTree = "<group>"; };
+		7EE963B61453646F00E00677 /* memory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = memory.cpp; path = ../../../src/memory.cpp; sourceTree = "<group>"; };
+		7EE963B71453646F00E00677 /* memory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = memory.h; path = ../../../src/memory.h; sourceTree = "<group>"; };
+		7EE963B81453646F00E00677 /* opcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = opcodes.h; path = ../../../src/opcodes.h; sourceTree = "<group>"; };
+		7EE963B91453646F00E00677 /* opengl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = opengl.h; path = ../../../src/opengl.h; sourceTree = "<group>"; };
+		7EE963BA1453646F00E00677 /* options.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = options.cpp; path = ../../../src/options.cpp; sourceTree = "<group>"; };
+		7EE963BB1453646F00E00677 /* options.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = options.h; path = ../../../src/options.h; sourceTree = "<group>"; };
+		7EE963BC1453646F00E00677 /* pad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pad.cpp; path = ../../../src/pad.cpp; sourceTree = "<group>"; };
+		7EE963BD1453646F00E00677 /* pad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pad.h; path = ../../../src/pad.h; sourceTree = "<group>"; };
+		7EE963BE1453646F00E00677 /* png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = png.h; path = ../../../src/png.h; sourceTree = "<group>"; };
+		7EE963BF1453646F00E00677 /* timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cpp; path = ../../../src/timer.cpp; sourceTree = "<group>"; };
+		7EE963C01453646F00E00677 /* timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = timer.h; path = ../../../src/timer.h; sourceTree = "<group>"; };
+		7EE963C11453646F00E00677 /* types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = types.h; path = ../../../src/types.h; sourceTree = "<group>"; };
+		7EE963C71453666800E00677 /* libpng15.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libpng15.framework; path = Library/Frameworks/libpng15.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -40,6 +66,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7EE963C81453666800E00677 /* libpng15.framework in Frameworks */,
 				7EBFBD4D14527E3F00B8A31C /* OpenGL.framework in Frameworks */,
 				7E3F2A01145272EE004C0966 /* Cocoa.framework in Frameworks */,
 			);
@@ -68,6 +95,7 @@
 		7E3F29FF145272EE004C0966 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7EE963C71453666800E00677 /* libpng15.framework */,
 				7EBFBD4C14527E3F00B8A31C /* OpenGL.framework */,
 				7E3F2A03145272EE004C0966 /* AppKit.framework */,
 				7E3F2A04145272EE004C0966 /* CoreData.framework */,
@@ -80,6 +108,24 @@
 		7E3F2A06145272EE004C0966 /* gbhd */ = {
 			isa = PBXGroup;
 			children = (
+				7EE963B51453646F00E00677 /* main.cpp */,
+				7EE963B61453646F00E00677 /* memory.cpp */,
+				7EE963B71453646F00E00677 /* memory.h */,
+				7EE963B81453646F00E00677 /* opcodes.h */,
+				7EE963B91453646F00E00677 /* opengl.h */,
+				7EE963BA1453646F00E00677 /* options.cpp */,
+				7EE963BB1453646F00E00677 /* options.h */,
+				7EE963BC1453646F00E00677 /* pad.cpp */,
+				7EE963BD1453646F00E00677 /* pad.h */,
+				7EE963BE1453646F00E00677 /* png.h */,
+				7EE963BF1453646F00E00677 /* timer.cpp */,
+				7EE963C01453646F00E00677 /* timer.h */,
+				7EE963C11453646F00E00677 /* types.h */,
+				7EE963AD1453646200E00677 /* cbopcodes.h */,
+				7EE963AE1453646200E00677 /* cpu.cpp */,
+				7EE963AF1453646200E00677 /* cpu.h */,
+				7EE963B11453646200E00677 /* gpu.cpp */,
+				7EE963B21453646200E00677 /* gpu.h */,
 				7EE963AA145363E500E00677 /* BasicOpenGLView.h */,
 				7EE963AB145363E500E00677 /* BasicOpenGLView.m */,
 				7EBFBD3A145273DF00B8A31C /* MainMenu.xib */,
@@ -125,6 +171,9 @@
 /* Begin PBXProject section */
 		7E3F29F3145272EE004C0966 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0410;
+			};
 			buildConfigurationList = 7E3F29F6145272EE004C0966 /* Build configuration list for PBXProject "gbhd" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -149,7 +198,6 @@
 			files = (
 				7EBFBD39145273CA00B8A31C /* gbhd-Info.plist in Resources */,
 				7EBFBD3C145273DF00B8A31C /* MainMenu.xib in Resources */,
-				7EBFBD3D145273DF00B8A31C /* gbhd-Info.plist in Resources */,
 				7EBFBD43145273FB00B8A31C /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -164,6 +212,13 @@
 				7EBFBD35145273BD00B8A31C /* AppDelegate.m in Sources */,
 				7EBFBD36145273BD00B8A31C /* main.m in Sources */,
 				7EE963AC145363E500E00677 /* BasicOpenGLView.m in Sources */,
+				7EE963B31453646200E00677 /* cpu.cpp in Sources */,
+				7EE963B41453646200E00677 /* gpu.cpp in Sources */,
+				7EE963C21453646F00E00677 /* main.cpp in Sources */,
+				7EE963C31453646F00E00677 /* memory.cpp in Sources */,
+				7EE963C41453646F00E00677 /* options.cpp in Sources */,
+				7EE963C51453646F00E00677 /* pad.cpp in Sources */,
+				7EE963C61453646F00E00677 /* timer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

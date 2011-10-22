@@ -14,7 +14,6 @@
 #include "types.h"
 
 #include "opengl.h"
-#include "glut.h"
 
 #include "png.h"
 
@@ -201,7 +200,8 @@ static void DumpPngScreenShot(
     
 }
 
-void DisplayFunc()
+extern "C" void DrawCore();
+void DrawCore()
 {
 //    AdvanceFrame();
     gGpu->flip = false;
@@ -243,11 +243,14 @@ void DisplayFunc()
         gTakeScreenShot = false;
     }
     
-    glutSwapBuffers();
+//    glutSwapBuffers();
 }
 
-void IdleFunc()
+extern "C" void UpdateCore(int deltaTime);
+
+void UpdateCore(int deltaTime)
 {
+/*
     static int lastTime = 0;
     int timeInMS = glutGet( GLUT_ELAPSED_TIME );
     if( lastTime == 0 )
@@ -256,9 +259,10 @@ void IdleFunc()
     }
     
     int deltaTime = timeInMS - lastTime;
+    lastTime = timeInMS;
+*/
     if( deltaTime == 0 )
         return;
-    lastTime = timeInMS;
     
     if( gPause )
         deltaTime = 0;
@@ -297,11 +301,14 @@ void IdleFunc()
     
     if( gGpu->flip )
     {
-        glutPostRedisplay();
+//        glutPostRedisplay();
     }
 }
 
-void KeyDownFunc( unsigned char c, int x, int y )
+extern "C" void KeyDownCore(int c);
+extern "C" void KeyUpCore(int c);
+
+void KeyDownCore(int c)
 {
     switch( c )
     {
@@ -314,12 +321,10 @@ void KeyDownFunc( unsigned char c, int x, int y )
     case 'j': gPad->KeyDown(kKey_Left);     break;
     case 'k': gPad->KeyDown(kKey_Down);     break;
     case 'l': gPad->KeyDown(kKey_Right);    break;
-    
-//    case ' ': gDumpTilesOnce = true;        break;
     }
 }
 
-void KeyUpFunc( unsigned char c, int x, int y )
+void KeyUpCore( int c )
 {
     switch( c )
     {
@@ -336,6 +341,8 @@ void KeyUpFunc( unsigned char c, int x, int y )
     case ' ': gPause = !gPause;             break;
      }
 }
+
+#if NOPE
 
 void SpecialKeyDownFunc( int k, int x, int y )
 {
@@ -359,6 +366,7 @@ void SpecialKeyDownFunc( int k, int x, int y )
         break;
     }
 }
+#endif
 
 static const struct {
     const char* rawName;
@@ -383,7 +391,79 @@ const char* FindPrettyGameName( const char* rawName )
     return rawName;
 };
 
-int main (int argc, char * argv[])
+extern "C" void InitCore();
+
+void InitCore()
+{
+    Options* pOptions = new Options();
+    Options& options = *pOptions;
+//    options.Parse(argc, argv);
+    options.inputFileName = "roms/sml.gb";
+    
+    FILE* file = fopen(options.inputFileName.c_str(), "rb");
+    if( file == NULL )
+    {
+        fprintf(stderr, "Failed to open \"%s\"\n", options.inputFileName.c_str());
+        return 1;
+    }
+    fseek(file, 0, SEEK_END);
+    size_t length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    
+    UInt8* buffer = new UInt8[ length ];
+    fread(buffer, 1, length, file);
+    fclose(file);
+    
+    // Read game name from ROM:
+    static const int kMaxRawGameNameLength = 15;
+    char rawGameName[kMaxRawGameNameLength + 1] = { 0 };
+    for( int ii = 0; ii < kMaxRawGameNameLength; ++ii )
+    {
+        static const int kRawGameNameOffset = 0x0134;
+        char c = (char) buffer[ kRawGameNameOffset + ii ];
+        rawGameName[ii] = c;
+        if( c == 0 )
+            break;
+    }
+    options.rawGameName = rawGameName;
+    options.prettyGameName = FindPrettyGameName(rawGameName);
+
+    std::string windowTitle = std::string("gbhd - ") + options.prettyGameName;
+//    glutSetWindowTitle(windowTitle.c_str());
+
+    
+    MemoryState* memory = new MemoryState(buffer);
+    Z80State* z80 = new Z80State(memory);
+    GPUState* gpu = new GPUState(options, memory);
+    TimerState* timer = new TimerState(memory);
+    Pad* pad = new Pad();
+    
+    gMultiRenderer = new MultiRenderer();
+    gRenderer = gMultiRenderer;
+    
+    gMultiRenderer->AddRenderer( new DefaultRenderer() );
+    //gMultiRenderer->AddRenderer( new SimpleRenderer() );
+    gMultiRenderer->AddRenderer( new AccurateRenderer() );
+    
+    memory->SetCpu(z80);
+    memory->SetGpu(gpu);
+    memory->SetPad(pad);
+    memory->SetTimer(timer);
+    
+    gpu->SetRenderer( gRenderer );
+    
+    gCpu = z80;
+    gGpu = gpu;
+    gPad = pad;
+    gTimer = timer;
+    gMemory = memory;
+    
+    // Load up any replacement textures needed
+    gpu->LoadReplacementTiles();
+}
+
+#ifdef NOPE
+int c_main (int argc, char * argv[])
 {
     Options options;
     options.Parse(argc, argv);
@@ -490,3 +570,4 @@ int main (int argc, char * argv[])
     glutMainLoop();
     return 0;
 }
+#endif

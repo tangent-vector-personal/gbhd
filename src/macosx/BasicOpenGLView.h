@@ -25,6 +25,7 @@
 - (void) drawInfo;
 
 - (void)keyDown:(NSEvent *)theEvent;
+- (void)keyUp:(NSEvent *)theEvent;
 
 - (void) drawRect:(NSRect)rect;
 

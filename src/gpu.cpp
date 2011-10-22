@@ -13,7 +13,6 @@
 #include "png.h"
 
 #include "opengl.h"
-#include "glut.h"
 
 #ifdef WIN32
 #include <direct.h>
@@ -1256,7 +1255,9 @@ void DefaultRenderer::Swap()
 }
     
 void DefaultRenderer::PresentGL()
-{    
+{
+    glDisable(GL_DEPTH_TEST);
+
     glColor4f(1,1,1,1);
     
     FrameState& frameState = frameStates[displayFrameStateIndex];
@@ -1309,9 +1310,6 @@ void DefaultRenderer::PresentGL()
     glDisable(GL_STENCIL_TEST);
 
     DrawTileMap(frameState.winMapStates, kTileImageLayer_Foreground);
-    
-    //
-    BindObjProgram();
     
     // Finally, draw sprites without the priority bit
     DrawSprites( frameState, false );

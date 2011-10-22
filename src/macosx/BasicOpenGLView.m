@@ -4,6 +4,9 @@
 
 #import "BasicOpenGLView.h"
 
+#include <mach/mach.h>
+#include <mach/mach_time.h>
+
 // ==================================
 
 static CFAbsoluteTime gStartTime = 0.0f;
@@ -61,26 +64,110 @@ static CFAbsoluteTime getElapsedTime (void)
 // per-window timer function, basic time based animation preformed here
 - (void)animationTimer:(NSTimer *)timer
 {
-    CFTimeInterval deltaTime = CFAbsoluteTimeGetCurrent () - time;
+    static uint64_t lastTime = 0;
+    if( lastTime == 0 )
+        lastTime = mach_absolute_time();
+    uint64_t thisTime = mach_absolute_time();
+    
+    uint64_t elapsedTime = thisTime - lastTime;
+    lastTime = thisTime;
+    
+    AbsoluteTime absTime = *((AbsoluteTime*) &elapsedTime);
+    Nanoseconds nanoTime = AbsoluteToNanoseconds(absTime);
+    
+    uint64_t elapsedNanos = *((uint64_t*) &nanoTime);
+
+    int deltaTime = (int) (elapsedNanos / 1000000);
+    
+    extern void UpdateCore(int deltaTime);
+    UpdateCore(deltaTime);
+    
 	time = CFAbsoluteTimeGetCurrent (); //reset time in all cases
     [self drawRect:[self bounds]]; // redraw now instead dirty to enable updates during live resize
 }
 
 #pragma mark ---- Method Overrides ----
 
+enum KeyCodes
+{
+    kKeyCode_S = 1,
+    kKeyCode_T = 17,
+    kKeyCode_A = 0,
+    kKeyCode_B = 11,
+    kKeyCode_I = 34,
+    kKeyCode_J = 38,
+    kKeyCode_K = 40,
+    kKeyCode_L = 37,
+};
+
 -(void)keyDown:(NSEvent *)theEvent
 {
-    NSString *characters = [theEvent characters];
-    if ([characters length]) {
-        unichar character = [characters characterAtIndex:0];
-		switch (character) {
-			case 'h':
-				break;
-			case 'c':
-				[self setNeedsDisplay: YES];
-				break;
-		}
-	}
+    extern void KeyDownCore(int c);
+
+    switch( [theEvent keyCode] )
+    {
+    case kKeyCode_S:
+        KeyDownCore('s');
+        break;
+    case kKeyCode_T:
+        KeyDownCore('t');
+        break;
+    case kKeyCode_A:
+        KeyDownCore('a');
+        break;
+    case kKeyCode_B:
+        KeyDownCore('b');
+        break;
+    case kKeyCode_I:
+        KeyDownCore('i');
+        break;
+    case kKeyCode_J:
+        KeyDownCore('j');
+        break;
+    case kKeyCode_K:
+        KeyDownCore('k');
+        break;
+    case kKeyCode_L:
+        KeyDownCore('l');
+        break;
+    default:
+        break;
+    }
+}
+
+-(void)keyUp:(NSEvent *)theEvent
+{
+    extern void KeyUpCore(int c);
+
+    switch( [theEvent keyCode] )
+    {
+    case kKeyCode_S:
+        KeyUpCore('s');
+        break;
+    case kKeyCode_T:
+        KeyUpCore('t');
+        break;
+    case kKeyCode_A:
+        KeyUpCore('a');
+        break;
+    case kKeyCode_B:
+        KeyUpCore('b');
+        break;
+    case kKeyCode_I:
+        KeyUpCore('i');
+        break;
+    case kKeyCode_J:
+        KeyUpCore('j');
+        break;
+    case kKeyCode_K:
+        KeyUpCore('k');
+        break;
+    case kKeyCode_L:
+        KeyUpCore('l');
+        break;
+    default:
+        break;
+    }
 }
 
 // ---------------------------------
@@ -90,12 +177,24 @@ static CFAbsoluteTime getElapsedTime (void)
     [[self openGLContext] makeCurrentContext];
     [[self openGLContext] update];
     
+    
+    static bool didInit = false;
+    if( !didInit )
+    {
+        extern void InitCore();
+        InitCore();
+        didInit = true;
+    }
+    
 	// setup viewport and prespective
 	[self resizeGL]; // forces projection matrix update (does test for size changes)
 	// [self updateModelView];  // update model view matrix for object
 
 	// clear our drawable
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    extern void DrawCore();
+    DrawCore();
     
 	
 	// model view and projection matricies already set
