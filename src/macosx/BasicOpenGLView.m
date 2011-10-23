@@ -7,26 +7,6 @@
 #include <mach/mach.h>
 #include <mach/mach_time.h>
 
-// ==================================
-
-static CFAbsoluteTime gStartTime = 0.0f;
-
-// set app start time
-static void setStartTime (void)
-{	
-	gStartTime = CFAbsoluteTimeGetCurrent ();
-}
-
-// ---------------------------------
-
-// return float elpased time in seconds since app start
-static CFAbsoluteTime getElapsedTime (void)
-{	
-	return CFAbsoluteTimeGetCurrent () - gStartTime;
-}
-
-// ===================================
-
 @implementation BasicOpenGLView
 
 // pixel format definition
@@ -176,15 +156,10 @@ enum KeyCodes
 
 - (void) drawRect:(NSRect)rect
 {
+#if NOPE
     [[self openGLContext] makeCurrentContext];
     [[self openGLContext] update];
     
-    
-    static bool didInit = false;
-    if( !didInit )
-    {
-        didInit = true;    
-    }
     
 	// setup viewport and prespective
 	[self resizeGL]; // forces projection matrix update (does test for size changes)
@@ -204,19 +179,102 @@ enum KeyCodes
 	// model view and projection matricies already set
 
     [[self openGLContext] flushBuffer];
+#endif
 }
 
 // ---------------------------------
+
+static CVReturn DisplayLinkCallback(
+    CVDisplayLinkRef displayLink,
+    const CVTimeStamp* now,
+    const CVTimeStamp* outputTime,
+    CVOptionFlags flagsIn,
+    CVOptionFlags* flagsOut,
+    void* displayLinkContext )
+{
+    CVReturn result = [(BasicOpenGLView*)displayLinkContext getFrameForTime:outputTime];
+    return result;
+}
 
 // set initial OpenGL state (current context is set)
 // called after context is created
 - (void) prepareOpenGL
 {
-    long swapInt = 1;
-
-    [[self openGLContext] setValues:&swapInt forParameter:NSOpenGLCPSwapInterval]; // set to vbl sync
+    // Set V-Sync
+    GLint swapInt = 1;
+    [[self openGLContext] setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
+    
+    CVDisplayLinkCreateWithActiveCGDisplays(&displayLink);
+    CVDisplayLinkSetOutputCallback(displayLink,
+        &DisplayLinkCallback, self);
+    
+    CGLContextObj cglContext = [[self openGLContext] CGLContextObj];
+    CGLPixelFormatObj cglPixelFormat = [[self pixelFormat] CGLPixelFormatObj];
+    CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(displayLink, cglContext, cglPixelFormat);
+    CVDisplayLinkStart(displayLink);
 
 	glShadeModel(GL_SMOOTH);    
+}
+
+// ---------------------------------
+
+- (void)dealloc
+{
+    // Release the display link
+    CVDisplayLinkRelease(displayLink);
+
+    [super dealloc];
+}
+
+// ---------------------------------
+
+- (CVReturn)getFrameForTime:(const CVTimeStamp*)outputTime
+{
+    [[self openGLContext] makeCurrentContext];
+    [[self openGLContext] update];
+    
+ 
+    static uint64_t lastTime = 0;
+    if( lastTime == 0 )
+        lastTime = mach_absolute_time();
+    uint64_t thisTime = mach_absolute_time();
+    
+    uint64_t elapsedTime = thisTime - lastTime;
+    lastTime = thisTime;
+    
+    AbsoluteTime absTime = *((AbsoluteTime*) &elapsedTime);
+    Nanoseconds nanoTime = AbsoluteToNanoseconds(absTime);
+    
+    uint64_t elapsedNanos = *((uint64_t*) &nanoTime);
+
+    int deltaTime = (int) (elapsedNanos / 1000000);
+    
+    extern void UpdateCore(int deltaTime);
+    UpdateCore(deltaTime);
+    
+       
+          
+                
+	// setup viewport and prespective
+	[self resizeGL]; // forces projection matrix update (does test for size changes)
+	// [self updateModelView];  // update model view matrix for object
+
+	// clear our drawable
+	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    
+	NSRect rectView = [self bounds];
+    int width = rectView.size.width;
+    int height = rectView.size.height;
+    
+    extern void DrawCore( int width, int height );
+    DrawCore( width, height );
+    
+	
+	// model view and projection matricies already set
+
+    [[self openGLContext] flushBuffer];
+
+    return kCVReturnSuccess;
 }
 
 // ---------------------------------
@@ -255,12 +313,6 @@ enum KeyCodes
 
 - (void) awakeFromNib
 {
-	setStartTime (); // get app start time
-	
-	// start animation timer
-	timer = [NSTimer timerWithTimeInterval:(1.0f/60.0f) target:self selector:@selector(animationTimer:) userInfo:nil repeats:YES];
-	[[NSRunLoop currentRunLoop] addTimer:timer forMode:NSDefaultRunLoopMode];
-	[[NSRunLoop currentRunLoop] addTimer:timer forMode:NSEventTrackingRunLoopMode]; // ensure timer fires during resize
 }
 
 - (IBAction)open:(id)sender

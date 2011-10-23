@@ -3,6 +3,7 @@
 // BasicOpenGLView.h
 
 #import <Cocoa/Cocoa.h>
+#import <CoreVideo/CoreVideo.h>
 
 #import <OpenGL/gl.h>
 #import <OpenGL/glext.h>
@@ -10,7 +11,7 @@
 
 @interface BasicOpenGLView : NSOpenGLView
 {
-	NSTimer* timer;
+    CVDisplayLinkRef displayLink;
 }
 
 + (NSOpenGLPixelFormat*) basicPixelFormat;
@@ -28,6 +29,10 @@
 - (void) drawRect:(NSRect)rect;
 
 - (void) prepareOpenGL;
+
+- (void)dealloc;
+
+- (CVReturn)getFrameForTime:(const CVTimeStamp*)outputTime;
 
 - (BOOL) acceptsFirstResponder;
 - (BOOL) becomeFirstResponder;
