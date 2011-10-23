@@ -36,6 +36,7 @@ static CFAbsoluteTime getElapsedTime (void)
         NSOpenGLPFAWindow,
         NSOpenGLPFADoubleBuffer,	// double buffered
         NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)16, // 16 bit depth buffer
+        NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)8,
         (NSOpenGLPixelFormatAttribute)nil
     };
     return [[[NSOpenGLPixelFormat alloc] initWithAttributes:attributes] autorelease];
@@ -48,8 +49,10 @@ static CFAbsoluteTime getElapsedTime (void)
 - (void) resizeGL
 {
 	NSRect rectView = [self bounds];
+    int width = rectView.size.width;
+    int height = rectView.size.height;
 	
-    glViewport (0, 0, rectView.size.width, rectView.size.height);
+    glViewport (0, 0, width, height);
 }
 
 // ---------------------------------
@@ -181,9 +184,22 @@ enum KeyCodes
     static bool didInit = false;
     if( !didInit )
     {
-        extern void InitCore();
-        InitCore();
         didInit = true;
+        NSOpenPanel* openDialog = [NSOpenPanel openPanel];
+        [openDialog setCanChooseFiles:YES];
+        [openDialog setCanChooseDirectories:NO];
+        [openDialog setResolvesAliases:YES];
+        [openDialog setAllowsMultipleSelection:NO];
+        if( [openDialog runModal] == NSOKButton )
+        {
+            NSURL* url = [openDialog URL];
+            NSString* path = [url path];
+            const char* str = [path UTF8String];
+
+            extern void InitCore(const char* name);
+            InitCore(str);
+        }
+    
     }
     
 	// setup viewport and prespective
@@ -191,10 +207,14 @@ enum KeyCodes
 	// [self updateModelView];  // update model view matrix for object
 
 	// clear our drawable
-	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     
-    extern void DrawCore();
-    DrawCore();
+	NSRect rectView = [self bounds];
+    int width = rectView.size.width;
+    int height = rectView.size.height;
+    
+    extern void DrawCore( int width, int height );
+    DrawCore( width, height );
     
 	
 	// model view and projection matricies already set
@@ -212,15 +232,7 @@ enum KeyCodes
 
     [[self openGLContext] setValues:&swapInt forParameter:NSOpenGLCPSwapInterval]; // set to vbl sync
 
-	// init GL stuff here
-	glEnable(GL_DEPTH_TEST);
-
 	glShadeModel(GL_SMOOTH);    
-	glEnable(GL_CULL_FACE);
-	glFrontFace(GL_CCW);
-	glPolygonOffset (1.0f, 1.0f);
-	
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 // ---------------------------------

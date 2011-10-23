@@ -19,7 +19,7 @@
 
 FILE* gLogFile = NULL;
 
-Z80State* gCpu;
+Z80State* gCpu = NULL;
 GPUState* gGpu;
 Pad* gPad;
 TimerState* gTimer;
@@ -200,9 +200,12 @@ static void DumpPngScreenShot(
     
 }
 
-extern "C" void DrawCore();
-void DrawCore()
+extern "C" void DrawCore( int width, int height );
+void DrawCore( int width, int height )
 {
+    if( gCpu == NULL )
+        return;
+
 //    AdvanceFrame();
     gGpu->flip = false;
 
@@ -212,7 +215,30 @@ void DrawCore()
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, kNativeScreenWidth, kNativeScreenHeight, 0, 0, 1);
+    
+    static const float kNativeAspectRatio =
+        (float) kNativeScreenWidth / (float) kNativeScreenHeight;
+    float currentAspectRatio =
+        (float) width / (float) height;
+    
+    float extraW = 0.0f;
+    float extraH = 0.0f;
+    
+    if( currentAspectRatio > kNativeAspectRatio )
+    {
+        float w = kNativeScreenHeight * currentAspectRatio;
+        extraW = (w - kNativeScreenWidth) * 0.5f;
+    }
+    else
+    {
+        float h = kNativeScreenWidth / currentAspectRatio;
+        extraH = (h - kNativeScreenHeight) * 0.5f;
+    }
+    
+    glOrtho(
+        -extraW, kNativeScreenWidth + extraW,
+        kNativeScreenHeight + extraH, -extraH,
+        0, 1);
     
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -225,6 +251,20 @@ void DrawCore()
     }
     
     gRenderer->PresentGL();
+
+    glDisable(GL_TEXTURE_2D);
+    glColor4f(0, 0, 0, 1);
+    if( currentAspectRatio > kNativeAspectRatio )
+    {
+        glRectf(-extraW, -extraH, 0, kNativeScreenHeight+extraH);
+        glRectf(kNativeScreenWidth, -extraH, kNativeScreenWidth+extraW, kNativeScreenHeight+extraH);
+    }
+    else
+    {
+        glRectf(-extraW, -extraH, kNativeScreenWidth + extraW, 0);        
+        glRectf(-extraW, kNativeScreenHeight, kNativeScreenWidth + extraW, kNativeScreenHeight+extraH);
+    }
+
     
     if( gDumpTilesOnce )
         gDumpTilesOnce = false;
@@ -250,6 +290,8 @@ extern "C" void UpdateCore(int deltaTime);
 
 void UpdateCore(int deltaTime)
 {
+    if( gCpu == NULL )
+        return;
 /*
     static int lastTime = 0;
     int timeInMS = glutGet( GLUT_ELAPSED_TIME );
@@ -310,6 +352,9 @@ extern "C" void KeyUpCore(int c);
 
 void KeyDownCore(int c)
 {
+    if( gCpu == NULL )
+        return;
+
     switch( c )
     {
     case 'a': gPad->KeyDown(kKey_A);        break;
@@ -326,6 +371,9 @@ void KeyDownCore(int c)
 
 void KeyUpCore( int c )
 {
+    if( gCpu == NULL )
+        return;
+
     switch( c )
     {
     case 'a': gPad->KeyUp(kKey_A);        break;
@@ -391,14 +439,14 @@ const char* FindPrettyGameName( const char* rawName )
     return rawName;
 };
 
-extern "C" void InitCore();
+extern "C" void InitCore(const char* str);
 
-void InitCore()
+void InitCore(const char* str)
 {
     Options* pOptions = new Options();
     Options& options = *pOptions;
 //    options.Parse(argc, argv);
-    options.inputFileName = "roms/sml.gb";
+    options.inputFileName = str;
     
     FILE* file = fopen(options.inputFileName.c_str(), "rb");
     if( file == NULL )
