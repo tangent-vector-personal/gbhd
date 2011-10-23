@@ -510,6 +510,11 @@ void InitCore(const char* str)
     gpu->LoadReplacementTiles();
 }
 
+extern "C" void SetMediaFolderCore(const char* path);
+void SetMediaFolderCore(const char* path)
+{
+}
+
 #ifdef NOPE
 int c_main (int argc, char * argv[])
 {

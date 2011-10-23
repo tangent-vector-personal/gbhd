@@ -14,6 +14,7 @@
 		7EBFBD3C145273DF00B8A31C /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7EBFBD3A145273DF00B8A31C /* MainMenu.xib */; };
 		7EBFBD43145273FB00B8A31C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7EBFBD40145273FB00B8A31C /* InfoPlist.strings */; };
 		7EBFBD4D14527E3F00B8A31C /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EBFBD4C14527E3F00B8A31C /* OpenGL.framework */; };
+		7EC5140A1453CB7B00364853 /* libpng15.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7EE963C71453666800E00677 /* libpng15.framework */; };
 		7EE963AC145363E500E00677 /* BasicOpenGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963AB145363E500E00677 /* BasicOpenGLView.m */; };
 		7EE963B31453646200E00677 /* cpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963AE1453646200E00677 /* cpu.cpp */; };
 		7EE963B41453646200E00677 /* gpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963B11453646200E00677 /* gpu.cpp */; };
@@ -24,6 +25,19 @@
 		7EE963C61453646F00E00677 /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963BF1453646F00E00677 /* timer.cpp */; };
 		7EE963C81453666800E00677 /* libpng15.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EE963C71453666800E00677 /* libpng15.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		7EC514091453CB5100364853 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				7EC5140A1453CB7B00364853 /* libpng15.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		7E3F29FC145272EE004C0966 /* gbhd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = gbhd.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -156,6 +170,7 @@
 				7E3F29F8145272EE004C0966 /* Sources */,
 				7E3F29F9145272EE004C0966 /* Frameworks */,
 				7E3F29FA145272EE004C0966 /* Resources */,
+				7EC514091453CB5100364853 /* CopyFiles */,
 			);
 			buildRules = (
 			);

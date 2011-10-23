@@ -85,7 +85,6 @@ static CFAbsoluteTime getElapsedTime (void)
     extern void UpdateCore(int deltaTime);
     UpdateCore(deltaTime);
     
-	time = CFAbsoluteTimeGetCurrent (); //reset time in all cases
     [self drawRect:[self bounds]]; // redraw now instead dirty to enable updates during live resize
 }
 
@@ -184,22 +183,7 @@ enum KeyCodes
     static bool didInit = false;
     if( !didInit )
     {
-        didInit = true;
-        NSOpenPanel* openDialog = [NSOpenPanel openPanel];
-        [openDialog setCanChooseFiles:YES];
-        [openDialog setCanChooseDirectories:NO];
-        [openDialog setResolvesAliases:YES];
-        [openDialog setAllowsMultipleSelection:NO];
-        if( [openDialog runModal] == NSOKButton )
-        {
-            NSURL* url = [openDialog URL];
-            NSString* path = [url path];
-            const char* str = [path UTF8String];
-
-            extern void InitCore(const char* name);
-            InitCore(str);
-        }
-    
+        didInit = true;    
     }
     
 	// setup viewport and prespective
@@ -242,6 +226,7 @@ enum KeyCodes
 	NSOpenGLPixelFormat * pf = [BasicOpenGLView basicPixelFormat];
 
 	self = [super initWithFrame: frameRect pixelFormat: pf];
+    
     return self;
 }
 
@@ -272,14 +257,71 @@ enum KeyCodes
 {
 	setStartTime (); // get app start time
 	
-	time = CFAbsoluteTimeGetCurrent ();  // set animation time start time
-
 	// start animation timer
 	timer = [NSTimer timerWithTimeInterval:(1.0f/60.0f) target:self selector:@selector(animationTimer:) userInfo:nil repeats:YES];
 	[[NSRunLoop currentRunLoop] addTimer:timer forMode:NSDefaultRunLoopMode];
 	[[NSRunLoop currentRunLoop] addTimer:timer forMode:NSEventTrackingRunLoopMode]; // ensure timer fires during resize
 }
 
+- (IBAction)open:(id)sender
+{
+    NSOpenPanel* openDialog = [NSOpenPanel openPanel];
+    [openDialog setCanChooseFiles:YES];
+    [openDialog setCanChooseDirectories:NO];
+    [openDialog setResolvesAliases:YES];
+    [openDialog setAllowsMultipleSelection:NO];
+    
+    [openDialog setPrompt:@"Open"];
+    [openDialog setAllowedFileTypes:[NSArray arrayWithObject:@"gb"]];
+    [openDialog setAllowsOtherFileTypes:NO];
+    
+    [openDialog
+        beginSheetModalForWindow:[self window]
+        completionHandler:^(NSInteger result)
+        {
+            if( result == NSOKButton )
+            {   
+                NSURL* url = [openDialog URL];
+                [[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:url];
+                
+                NSString* path = [url path];
+                [self openFile:path];
+            }
+        }];
+}
+
+- (void)openFile:(NSString*)path
+{
+    const char* str = [path UTF8String];
+    extern void InitCore(const char* path);
+    InitCore(str);    
+}
+
+- (IBAction)setMediaFolder:(id)sender
+{
+    NSOpenPanel* setMediaFolderDialog = [NSOpenPanel openPanel];
+    [setMediaFolderDialog setCanChooseFiles:NO];
+    [setMediaFolderDialog setCanChooseDirectories:YES];
+    [setMediaFolderDialog setResolvesAliases:YES];
+    [setMediaFolderDialog setAllowsMultipleSelection:NO];
+    
+    [setMediaFolderDialog setPrompt:@"Select"];
+    
+    [setMediaFolderDialog
+        beginSheetModalForWindow:[self window]
+        completionHandler:^(NSInteger result)
+        {
+            if( result == NSOKButton )
+            {
+                NSURL* url = [setMediaFolderDialog URL];
+                NSString* path = [url path];
+                const char* str = [path UTF8String];
+                
+                extern void SetMediaFolderCore(const char* path);
+                SetMediaFolderCore(path);
+            }
+        }];
+}
 
 @end
 

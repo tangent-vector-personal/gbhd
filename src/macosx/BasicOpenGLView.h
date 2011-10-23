@@ -11,8 +11,6 @@
 @interface BasicOpenGLView : NSOpenGLView
 {
 	NSTimer* timer;
- 
-	CFAbsoluteTime time;
 }
 
 + (NSOpenGLPixelFormat*) basicPixelFormat;
@@ -37,5 +35,11 @@
 
 - (id) initWithFrame: (NSRect) frameRect;
 - (void) awakeFromNib;
+
+- (IBAction)open:(id)sender;
+- (void)openFile:(NSString*)name;
+
+- (IBAction)setMediaFolder:(id)sender;
+- (void)handleSetMediaFolder:(int)result;
 
 @end
