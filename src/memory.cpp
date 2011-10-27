@@ -11,8 +11,8 @@
 #include "pad.h"
 #include "timer.h"
 
-MemoryState::MemoryState( const UInt8* rom )
-    : rom(rom)
+MemoryState::MemoryState()
+    : rom(NULL)
 {
     Reset();
 }
@@ -34,7 +34,7 @@ void MemoryState::Reset()
     romOffset = 0x4000;
     ramOffset = 0;
     
-    cartType = rom[0x0147];
+    cartType = rom != NULL ? rom[0x0147] : 0;
     switch( cartType )
     {
     case 0x00:
@@ -51,6 +51,12 @@ void MemoryState::Reset()
     }
     
     LOG(MMU, "Reset");
+}
+
+void MemoryState::SetRom( const UInt8* rom )
+{
+    this->rom = rom;
+    Reset();
 }
 
 void MemoryState::RaiseInterruptLine( InterruptFlag flag )

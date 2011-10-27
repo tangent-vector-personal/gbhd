@@ -22,6 +22,7 @@ public:
     std::string inputFileName;
     std::string rawGameName;
     std::string prettyGameName;
+    std::string mediaPath;
     bool dumpTiles;
     
 private:

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		7E3F2A01145272EE004C0966 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E3F2A00145272EE004C0966 /* Cocoa.framework */; };
+		7E47CE2614561E1200784384 /* gb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7E47CE2514561E1200784384 /* gb.cpp */; };
 		7EBFBD35145273BD00B8A31C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 7EBFBD33145273BD00B8A31C /* AppDelegate.m */; };
 		7EBFBD36145273BD00B8A31C /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 7EBFBD34145273BD00B8A31C /* main.m */; };
 		7EBFBD39145273CA00B8A31C /* gbhd-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7EBFBD37145273CA00B8A31C /* gbhd-Info.plist */; };
@@ -46,6 +47,9 @@
 		7E3F2A03145272EE004C0966 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		7E3F2A04145272EE004C0966 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		7E3F2A05145272EE004C0966 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		7E47CE2314561DFB00784384 /* gb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gb.h; path = ../../../src/gb.h; sourceTree = "<group>"; };
+		7E47CE2514561E1200784384 /* gb.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gb.cpp; path = ../../../src/gb.cpp; sourceTree = "<group>"; };
+		7E47CE271456201E00784384 /* keys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = keys.h; path = ../../../src/keys.h; sourceTree = "<group>"; };
 		7EBFBD32145273BD00B8A31C /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = ../../../src/macosx/AppDelegate.h; sourceTree = "<group>"; };
 		7EBFBD33145273BD00B8A31C /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = ../../../src/macosx/AppDelegate.m; sourceTree = "<group>"; };
 		7EBFBD34145273BD00B8A31C /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = ../../../src/macosx/main.m; sourceTree = "<group>"; };
@@ -95,7 +99,6 @@
 		7E3F29F1145272EE004C0966 = {
 			isa = PBXGroup;
 			children = (
-				7EC5140B1453D2C600364853 /* CoreVideo.framework */,
 				7E3F2A06145272EE004C0966 /* gbhd */,
 				7E3F29FF145272EE004C0966 /* Frameworks */,
 				7E3F29FD145272EE004C0966 /* Products */,
@@ -113,6 +116,7 @@
 		7E3F29FF145272EE004C0966 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7EC5140B1453D2C600364853 /* CoreVideo.framework */,
 				7EE963C71453666800E00677 /* libpng15.framework */,
 				7EBFBD4C14527E3F00B8A31C /* OpenGL.framework */,
 				7E3F2A03145272EE004C0966 /* AppKit.framework */,
@@ -127,6 +131,7 @@
 			isa = PBXGroup;
 			children = (
 				7EE963B51453646F00E00677 /* main.cpp */,
+				7E47CE2514561E1200784384 /* gb.cpp */,
 				7EE963B61453646F00E00677 /* memory.cpp */,
 				7EE963B71453646F00E00677 /* memory.h */,
 				7EE963B81453646F00E00677 /* opcodes.h */,
@@ -150,6 +155,8 @@
 				7EBFBD32145273BD00B8A31C /* AppDelegate.h */,
 				7EBFBD33145273BD00B8A31C /* AppDelegate.m */,
 				7E3F2A07145272EE004C0966 /* Supporting Files */,
+				7E47CE2314561DFB00784384 /* gb.h */,
+				7E47CE271456201E00784384 /* keys.h */,
 			);
 			path = gbhd;
 			sourceTree = "<group>";
@@ -238,6 +245,7 @@
 				7EE963C41453646F00E00677 /* options.cpp in Sources */,
 				7EE963C51453646F00E00677 /* pad.cpp in Sources */,
 				7EE963C61453646F00E00677 /* timer.cpp in Sources */,
+				7E47CE2614561E1200784384 /* gb.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

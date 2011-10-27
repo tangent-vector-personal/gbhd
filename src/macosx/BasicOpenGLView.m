@@ -7,6 +7,8 @@
 #include <mach/mach.h>
 #include <mach/mach_time.h>
 
+#include "gb.h"
+
 @implementation BasicOpenGLView
 
 // pixel format definition
@@ -35,39 +37,6 @@
     glViewport (0, 0, width, height);
 }
 
-// ---------------------------------
-
-// given a delta time in seconds and current rotation accel, velocity and position, update overall object rotation
-- (void) updateObjectRotationForTimeDelta:(CFAbsoluteTime)deltaTime
-{
-}
-
-// ---------------------------------
-
-// per-window timer function, basic time based animation preformed here
-- (void)animationTimer:(NSTimer *)timer
-{
-    static uint64_t lastTime = 0;
-    if( lastTime == 0 )
-        lastTime = mach_absolute_time();
-    uint64_t thisTime = mach_absolute_time();
-    
-    uint64_t elapsedTime = thisTime - lastTime;
-    lastTime = thisTime;
-    
-    AbsoluteTime absTime = *((AbsoluteTime*) &elapsedTime);
-    Nanoseconds nanoTime = AbsoluteToNanoseconds(absTime);
-    
-    uint64_t elapsedNanos = *((uint64_t*) &nanoTime);
-
-    int deltaTime = (int) (elapsedNanos / 1000000);
-    
-    extern void UpdateCore(int deltaTime);
-    UpdateCore(deltaTime);
-    
-    [self drawRect:[self bounds]]; // redraw now instead dirty to enable updates during live resize
-}
-
 #pragma mark ---- Method Overrides ----
 
 enum KeyCodes
@@ -84,33 +53,31 @@ enum KeyCodes
 
 -(void)keyDown:(NSEvent *)theEvent
 {
-    extern void KeyDownCore(int c);
-
     switch( [theEvent keyCode] )
     {
     case kKeyCode_S:
-        KeyDownCore('s');
+        GameBoyState_KeyDown(gb, kKey_Start);
         break;
     case kKeyCode_T:
-        KeyDownCore('t');
+        GameBoyState_KeyDown(gb, kKey_Select);
         break;
     case kKeyCode_A:
-        KeyDownCore('a');
+        GameBoyState_KeyDown(gb, kKey_A);
         break;
     case kKeyCode_B:
-        KeyDownCore('b');
+        GameBoyState_KeyDown(gb, kKey_B);
         break;
     case kKeyCode_I:
-        KeyDownCore('i');
+        GameBoyState_KeyDown(gb, kKey_Up);
         break;
     case kKeyCode_J:
-        KeyDownCore('j');
+        GameBoyState_KeyDown(gb, kKey_Left);
         break;
     case kKeyCode_K:
-        KeyDownCore('k');
+        GameBoyState_KeyDown(gb, kKey_Down);
         break;
     case kKeyCode_L:
-        KeyDownCore('l');
+        GameBoyState_KeyDown(gb, kKey_Right);
         break;
     default:
         break;
@@ -119,67 +86,35 @@ enum KeyCodes
 
 -(void)keyUp:(NSEvent *)theEvent
 {
-    extern void KeyUpCore(int c);
-
     switch( [theEvent keyCode] )
     {
     case kKeyCode_S:
-        KeyUpCore('s');
+        GameBoyState_KeyUp(gb, kKey_Start);
         break;
     case kKeyCode_T:
-        KeyUpCore('t');
+        GameBoyState_KeyUp(gb, kKey_Select);
         break;
     case kKeyCode_A:
-        KeyUpCore('a');
+        GameBoyState_KeyUp(gb, kKey_A);
         break;
     case kKeyCode_B:
-        KeyUpCore('b');
+        GameBoyState_KeyUp(gb, kKey_B);
         break;
     case kKeyCode_I:
-        KeyUpCore('i');
+        GameBoyState_KeyUp(gb, kKey_Up);
         break;
     case kKeyCode_J:
-        KeyUpCore('j');
+        GameBoyState_KeyUp(gb, kKey_Left);
         break;
     case kKeyCode_K:
-        KeyUpCore('k');
+        GameBoyState_KeyUp(gb, kKey_Down);
         break;
     case kKeyCode_L:
-        KeyUpCore('l');
+        GameBoyState_KeyUp(gb, kKey_Right);
         break;
     default:
         break;
     }
-}
-
-// ---------------------------------
-
-- (void) drawRect:(NSRect)rect
-{
-#if NOPE
-    [[self openGLContext] makeCurrentContext];
-    [[self openGLContext] update];
-    
-    
-	// setup viewport and prespective
-	[self resizeGL]; // forces projection matrix update (does test for size changes)
-	// [self updateModelView];  // update model view matrix for object
-
-	// clear our drawable
-	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    
-	NSRect rectView = [self bounds];
-    int width = rectView.size.width;
-    int height = rectView.size.height;
-    
-    extern void DrawCore( int width, int height );
-    DrawCore( width, height );
-    
-	
-	// model view and projection matricies already set
-
-    [[self openGLContext] flushBuffer];
-#endif
 }
 
 // ---------------------------------
@@ -192,18 +127,28 @@ static CVReturn DisplayLinkCallback(
     CVOptionFlags* flagsOut,
     void* displayLinkContext )
 {
-    CVReturn result = [(BasicOpenGLView*)displayLinkContext getFrameForTime:outputTime];
-    return result;
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    [(BasicOpenGLView*)displayLinkContext drawRect:NSZeroRect];
+    [pool release];
+    return kCVReturnSuccess;
 }
 
 // set initial OpenGL state (current context is set)
 // called after context is created
 - (void) prepareOpenGL
 {
+    lock = [[NSRecursiveLock alloc] init];
+
     // Set V-Sync
     GLint swapInt = 1;
     [[self openGLContext] setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
     
+    [[self openGLContext] makeCurrentContext];
+
+	glShadeModel(GL_SMOOTH);
+    
+    gb = GameBoyState_Create();
+
     CVDisplayLinkCreateWithActiveCGDisplays(&displayLink);
     CVDisplayLinkSetOutputCallback(displayLink,
         &DisplayLinkCallback, self);
@@ -212,8 +157,15 @@ static CVReturn DisplayLinkCallback(
     CGLPixelFormatObj cglPixelFormat = [[self pixelFormat] CGLPixelFormatObj];
     CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(displayLink, cglContext, cglPixelFormat);
     CVDisplayLinkStart(displayLink);
+}
 
-	glShadeModel(GL_SMOOTH);    
+// ---------------------------------
+
+- (void) update
+{
+    [lock lock];
+    [super update];
+    [lock unlock];
 }
 
 // ---------------------------------
@@ -223,58 +175,48 @@ static CVReturn DisplayLinkCallback(
     // Release the display link
     CVDisplayLinkRelease(displayLink);
 
+    // Next free up the emulator state
+    GameBoyState_Release(gb);
+
     [super dealloc];
 }
 
 // ---------------------------------
 
-- (CVReturn)getFrameForTime:(const CVTimeStamp*)outputTime
+- (void)drawRect:(NSRect)theRect
 {
+    [lock lock];
+
     [[self openGLContext] makeCurrentContext];
     [[self openGLContext] update];
     
- 
-    static uint64_t lastTime = 0;
-    if( lastTime == 0 )
-        lastTime = mach_absolute_time();
-    uint64_t thisTime = mach_absolute_time();
-    
-    uint64_t elapsedTime = thisTime - lastTime;
-    lastTime = thisTime;
-    
-    AbsoluteTime absTime = *((AbsoluteTime*) &elapsedTime);
+    uint64_t machTime = mach_absolute_time();
+    AbsoluteTime absTime = *((AbsoluteTime*) &machTime );
     Nanoseconds nanoTime = AbsoluteToNanoseconds(absTime);
-    
-    uint64_t elapsedNanos = *((uint64_t*) &nanoTime);
+    uint64_t nanos = *((uint64_t*) &nanoTime);
 
-    int deltaTime = (int) (elapsedNanos / 1000000);
-    
-    extern void UpdateCore(int deltaTime);
-    UpdateCore(deltaTime);
-    
-       
-          
+    uint64_t nanosecondsPerSecond = 1000000000; // 10^9
+    GameBoyState_Update(gb, nanos, nanosecondsPerSecond );
                 
 	// setup viewport and prespective
 	[self resizeGL]; // forces projection matrix update (does test for size changes)
 	// [self updateModelView];  // update model view matrix for object
 
 	// clear our drawable
+    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     
 	NSRect rectView = [self bounds];
     int width = rectView.size.width;
     int height = rectView.size.height;
     
-    extern void DrawCore( int width, int height );
-    DrawCore( width, height );
-    
+    GameBoyState_RenderGL( gb, width, height );    
 	
-	// model view and projection matricies already set
-
     [[self openGLContext] flushBuffer];
+    
+    [NSOpenGLContext clearCurrentContext];
 
-    return kCVReturnSuccess;
+    [lock unlock];
 }
 
 // ---------------------------------
@@ -284,6 +226,8 @@ static CVReturn DisplayLinkCallback(
 	NSOpenGLPixelFormat * pf = [BasicOpenGLView basicPixelFormat];
 
 	self = [super initWithFrame: frameRect pixelFormat: pf];
+    
+    gb = NULL;
     
     return self;
 }
@@ -345,8 +289,11 @@ static CVReturn DisplayLinkCallback(
 - (void)openFile:(NSString*)path
 {
     const char* str = [path UTF8String];
-    extern void InitCore(const char* path);
-    InitCore(str);    
+    
+    GameBoyState_SetGamePath(gb, str);
+    
+    // If not already started, start now
+    GameBoyState_Start(gb);
 }
 
 - (IBAction)setMediaFolder:(id)sender
@@ -369,8 +316,7 @@ static CVReturn DisplayLinkCallback(
                 NSString* path = [url path];
                 const char* str = [path UTF8String];
                 
-                extern void SetMediaFolderCore(const char* path);
-                SetMediaFolderCore(path);
+                GameBoyState_SetMediaPath(gb, str);
             }
         }];
 }

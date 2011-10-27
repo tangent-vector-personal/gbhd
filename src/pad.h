@@ -5,22 +5,9 @@
 #ifndef gbemu_pad_h
 #define gbemu_pad_h
 
+#include "keys.h"
 #include "types.h"
 
-//
-// The Key enumeration defines the available input keys on the Game Boy
-//
-enum Key
-{
-    kKey_Up,
-    kKey_Down,
-    kKey_Left,
-    kKey_Right,
-    kKey_A,
-    kKey_B,
-    kKey_Select,
-    kKey_Start
-};
 
 //
 // The Pad class defines an interface that both the application and the

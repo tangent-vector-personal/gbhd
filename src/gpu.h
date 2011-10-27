@@ -31,8 +31,17 @@ class TileCacheImage
 {
 public:
     TileCacheImage();
+    
+    void SetImageData(int width, int height, const Color* data );
+
+    void ClearReplacementImage();
 
     Color pixels[8][8];
+    
+    uint32_t GetTextureID();
+    
+private:
+
     uint32_t textureID;
 };
 
@@ -78,6 +87,8 @@ public:
     
     TileCacheSubImage GetSubImage( TileImageLayer layer ) { return images[layer]; }
     void SetSubImage( TileImageLayer layer, const TileCacheSubImage& image ) { this->images[layer] = image; }
+    
+    void ClearReplacementTiles();
 
 private:
 
@@ -111,6 +122,7 @@ public:
     UInt8 oam[160];
     
     void LoadReplacementTiles();
+    void ClearReplacementTiles();
 
 public:
     enum LcdMode

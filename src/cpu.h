@@ -90,9 +90,10 @@ private:
     bool halt;
     bool stop;
 
-    void Reset();
 
 public:
+    void Reset();
+
     bool IsStoppedOrHalted() { return halt || stop; }
 
     int Step();

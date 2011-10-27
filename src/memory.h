@@ -74,7 +74,9 @@ private:
     TimerState* timer;
         
 public:
-    MemoryState( const UInt8* rom );
+    MemoryState();
+    
+    void SetRom( const UInt8* rom );
     
     void SetCpu( Z80State* cpu ) { this->cpu = cpu; }
     void SetGpu( GPUState* gpu ) { this->gpu = gpu; }

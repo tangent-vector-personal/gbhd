@@ -527,6 +527,14 @@ void GPUState::LoadReplacementTiles()
     fclose(file);
 }
 
+void GPUState::ClearReplacementTiles()
+{
+    for( int ii = 0; ii < kTileImageLayerCount; ++ii )
+    {
+        tileCaches[ii]->ClearReplacementTiles();
+    }
+}
+
 struct PaletteEntry
 {
     float value;
@@ -796,13 +804,8 @@ TileCacheImage* GPUState::LoadReplacementImage(
     
     
     TileCacheImage* image = new TileCacheImage();    
-    glGenTextures(1, &image->textureID);
-    glBindTexture(GL_TEXTURE_2D, image->textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    
+    image->SetImageData(width, height, &data[0]);
     
     return image;
 }
@@ -860,6 +863,38 @@ TileCacheImage::TileCacheImage()
     textureID = 0;
 }
 
+void TileCacheImage::SetImageData(int width, int height, const Color* data)
+{
+    if( textureID == 0 )
+        glGenTextures(1, &textureID);
+            
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+}
+
+void TileCacheImage::ClearReplacementImage()
+{
+    if( textureID != 0 )
+    {
+        SetImageData(8, 8, &pixels[0][0]);
+    }
+}
+
+uint32_t TileCacheImage::GetTextureID()
+{
+    if( textureID == 0 )
+    {
+        SetImageData(8, 8, &pixels[0][0]);
+    }
+    return textureID;
+}
+
+//
+
 RectF::RectF()
 {}
 
@@ -906,6 +941,21 @@ TileCacheNode* TileCacheNode::GetChildUInt4( UInt8 value )
         children[value] = new TileCacheNode();
     }
     return children[value];
+}
+
+void TileCacheNode::ClearReplacementTiles()
+{
+    for( int ii = 0; ii < kTileImageLayerCount; ++ii )
+    {
+        if( images[ii].image != NULL )
+            images[ii].image->ClearReplacementImage();
+    }
+
+    for( int ii = 0; ii < 16; ++ii )
+    {
+        if( children[ii] )
+            children[ii]->ClearReplacementTiles();
+    }
 }
 
 
@@ -1345,17 +1395,7 @@ void DefaultRenderer::DrawTileMap( TileMapState* tileMap, TileImageLayer layer )
                     glEnd();
                 }
             
-                if( image->textureID == 0 )
-                {
-                    glGenTextures(1, &image->textureID);
-                    glBindTexture(GL_TEXTURE_2D, image->textureID);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->pixels);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                }
-                glBindTexture(GL_TEXTURE_2D, image->textureID);
+                glBindTexture(GL_TEXTURE_2D, image->GetTextureID());
                 
                 lastImage = image;
                 
@@ -1435,17 +1475,7 @@ void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
                     glEnd();
                 }
             
-                if( image->textureID == 0 )
-                {
-                    glGenTextures(1, &image->textureID);
-                    glBindTexture(GL_TEXTURE_2D, image->textureID);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->pixels);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                }
-                glBindTexture(GL_TEXTURE_2D, image->textureID);
+                glBindTexture(GL_TEXTURE_2D, image->GetTextureID());
                 
                 lastImage = image;
                 
@@ -1757,17 +1787,7 @@ void SimpleRenderer::DrawTileMap( TileMapState& tileMap, TileImageLayer layer )
                     glEnd();
                 }
             
-                if( image->textureID == 0 )
-                {
-                    glGenTextures(1, &image->textureID);
-                    glBindTexture(GL_TEXTURE_2D, image->textureID);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->pixels);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                }
-                glBindTexture(GL_TEXTURE_2D, image->textureID);
+                glBindTexture(GL_TEXTURE_2D, image->GetTextureID());
                 
                 lastImage = image;
                 
@@ -1844,17 +1864,7 @@ void SimpleRenderer::DrawSprites( FrameState& frameState, bool priority )
                     glEnd();
                 }
             
-                if( image->textureID == 0 )
-                {
-                    glGenTextures(1, &image->textureID);
-                    glBindTexture(GL_TEXTURE_2D, image->textureID);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->pixels);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                }
-                glBindTexture(GL_TEXTURE_2D, image->textureID);
+                glBindTexture(GL_TEXTURE_2D, image->GetTextureID());
                 
                 lastImage = image;
                 

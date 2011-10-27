@@ -9,30 +9,28 @@
 #import <OpenGL/glext.h>
 #import <OpenGL/glu.h>
 
+struct GameBoyState;
+
 @interface BasicOpenGLView : NSOpenGLView
 {
     CVDisplayLinkRef displayLink;
+    struct GameBoyState* gb;
+    NSRecursiveLock* lock;
 }
 
 + (NSOpenGLPixelFormat*) basicPixelFormat;
 
-- (void) resizeGL;
-
-- (void) updateObjectRotationForTimeDelta:(CFAbsoluteTime)deltaTime;
-- (void)animationTimer:(NSTimer *)timer;
-
-- (void) drawInfo;
+- (void)resizeGL;
 
 - (void)keyDown:(NSEvent *)theEvent;
 - (void)keyUp:(NSEvent *)theEvent;
 
-- (void) drawRect:(NSRect)rect;
-
 - (void) prepareOpenGL;
+- (void) update;
 
 - (void)dealloc;
 
-- (CVReturn)getFrameForTime:(const CVTimeStamp*)outputTime;
+- (void)drawRect:(NSRect)theRect;
 
 - (BOOL) acceptsFirstResponder;
 - (BOOL) becomeFirstResponder;
