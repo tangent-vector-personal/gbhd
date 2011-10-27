@@ -244,6 +244,22 @@ void GameBoyState::Resume()
     _mode = kMode_Running;
 }
 
+void GameBoyState::TogglePause()
+{
+    switch( _mode )
+    {
+    case kMode_Running:
+        Pause();
+        break;
+    case kMode_Paused:
+        Resume();
+        break;
+    default:
+        break;
+    }
+}
+
+
 void GameBoyState::KeyDown(Key key)
 {
     _pad->KeyDown(key);
@@ -345,6 +361,14 @@ void GameBoyState::RenderGL( int width, int height )
 #endif
 }
 
+void GameBoyState::ToggleRenderer()
+{
+    if( _multiRenderer == NULL )
+        return;
+        
+    _multiRenderer->NextRenderer();
+}
+
 // C interface
 
 struct GameBoyState* GameBoyState_Create()
@@ -405,6 +429,12 @@ void GameBoyState_Resume( struct GameBoyState* gb )
     gb->Resume();
 }
 
+void GameBoyState_TogglePause( struct GameBoyState* gb )
+{
+    if( gb == NULL ) return;
+    gb->TogglePause();
+}
+
 void GameBoyState_KeyDown( struct GameBoyState* gb, enum Key key )
 {
     if( gb == NULL ) return;
@@ -421,5 +451,11 @@ void GameBoyState_RenderGL( struct GameBoyState* gb, int width, int height )
 {
     if( gb == NULL ) return;
     gb->RenderGL(width, height);
+}
+
+void GameBoyState_ToggleRenderer( struct GameBoyState* gb )
+{
+    if( gb == NULL ) return;
+    gb->ToggleRenderer();
 }
 

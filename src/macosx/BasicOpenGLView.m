@@ -49,6 +49,9 @@ enum KeyCodes
     kKeyCode_J = 38,
     kKeyCode_K = 40,
     kKeyCode_L = 37,
+    
+    kKeyCode_Space = 49,
+    kKeyCode_0 = 29,
 };
 
 -(void)keyDown:(NSEvent *)theEvent
@@ -79,6 +82,14 @@ enum KeyCodes
     case kKeyCode_L:
         GameBoyState_KeyDown(gb, kKey_Right);
         break;
+        
+    case kKeyCode_Space:
+        GameBoyState_TogglePause(gb);
+        break;
+    case kKeyCode_0:
+        GameBoyState_ToggleRenderer(gb);
+        break;
+        
     default:
         break;
     }

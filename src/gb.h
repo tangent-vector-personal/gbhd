@@ -40,11 +40,13 @@ public:
     
     void Pause();
     void Resume();
+    void TogglePause();
     
     void KeyDown(Key key);
     void KeyUp(Key key);
     
     void RenderGL( int width, int height );
+    void ToggleRenderer();
     
 private:
     enum Mode
@@ -92,11 +94,13 @@ void GameBoyState_Update( struct GameBoyState* gb, UInt64 absTimeNumer, UInt64 a
 
 void GameBoyState_Pause( struct GameBoyState* gb );
 void GameBoyState_Resume( struct GameBoyState* gb );
+void GameBoyState_TogglePause( struct GameBoyState* gb );
 
 void GameBoyState_KeyDown( struct GameBoyState* gb, enum Key key );
 void GameBoyState_KeyUp( struct GameBoyState* gb, enum Key key );
 
 void GameBoyState_RenderGL( struct GameBoyState* gb, int width, int height );
+void GameBoyState_ToggleRenderer( struct GameBoyState* gb );
 
 #ifdef __cplusplus
 }
