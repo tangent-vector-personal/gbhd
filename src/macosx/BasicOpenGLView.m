@@ -52,6 +52,7 @@ enum KeyCodes
     
     kKeyCode_Space = 49,
     kKeyCode_0 = 29,
+    kKeyCode_9 = 25,
 };
 
 -(void)keyDown:(NSEvent *)theEvent
@@ -88,6 +89,9 @@ enum KeyCodes
         break;
     case kKeyCode_0:
         GameBoyState_ToggleRenderer(gb);
+        break;
+    case kKeyCode_9:
+        GameBoyState_DumpTiles(gb);
         break;
         
     default:

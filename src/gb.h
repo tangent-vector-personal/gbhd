@@ -47,6 +47,7 @@ public:
     
     void RenderGL( int width, int height );
     void ToggleRenderer();
+    void DumpTiles();
     
 private:
     enum Mode
@@ -101,6 +102,7 @@ void GameBoyState_KeyUp( struct GameBoyState* gb, enum Key key );
 
 void GameBoyState_RenderGL( struct GameBoyState* gb, int width, int height );
 void GameBoyState_ToggleRenderer( struct GameBoyState* gb );
+void GameBoyState_DumpTiles( struct GameBoyState* gb );
 
 #ifdef __cplusplus
 }

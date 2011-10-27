@@ -315,7 +315,7 @@ void MakeDirectory(const char* name)
 
 void GPUState::DumpTileImage( int tileIndex, UInt8 palette )
 {
-    if( !options.dumpTiles && !gDumpTilesOnce )
+    if( !options.dumpTilesOnce )
         return;
 
     static const int kTileSizeInBytes = 16;

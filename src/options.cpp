@@ -6,14 +6,14 @@
 #include <cassert>
 
 Options::Options()
-    : dumpTiles(false)
+    : dumpTilesOnce(false)
 {}
 
 typedef void (*OptionFunc)(Options* options, const char* arg);
 
-static void DumpTilesFunc( Options* options, const char* arg )
+static void MediaPathFunc( Options* options, const char* arg )
 {
-    options->dumpTiles = true;
+    options->mediaPath = arg;
 }
 
 static const struct
@@ -23,7 +23,7 @@ static const struct
     int argCount;
     OptionFunc func;
 } kOptionFlags[] = {
-    { "dump-tiles", NULL, 0, &DumpTilesFunc },
+    { "media-path", NULL, 0, &MediaPathFunc },
     { NULL, NULL, 0, NULL },
 };
 

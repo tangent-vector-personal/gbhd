@@ -47,26 +47,51 @@ GameBoyState::~GameBoyState()
 {
 }
 
-static const struct {
-    const char* rawName;
-    const char* prettyName;
-} kMapRawToPrettyGameName[] = {
-    { "CASTLEVANIA ADV",    "Castlevania - The Adventure" },
-    { "CASTLEVANIA2 BE",    "Castlevania II - Belmont's Revenge" },
-    { "MARIOLAND2",         "Super Mario Land 2 - 6 Golden Coins" },
-    { "METROID2",           "Metroid II - Return of Samus" },
-    { "SUPER MARIOLAND",    "Super Mario Land" },
-    { "TETRIS",             "Tetris" },
-    { "ZELDA",              "The Legend of Zelda - Link's Awakening" },
-};
-
-static const char* FindPrettyGameName( const char* rawName )
+static std::string FindPrettyGameName(
+    const std::string& mediaPath,
+    const std::string& rawName )
 {
-    for( int ii = 0; kMapRawToPrettyGameName[ii].rawName != NULL; ++ii )
+    static const int kBufferSize = 1024;
+    char nameBuffer[kBufferSize];
+    sprintf(nameBuffer, "%s/names.txt", mediaPath.c_str());
+    
+    FILE* file = fopen(nameBuffer, "r");
+    if( file == NULL )
+        return rawName;
+        
+    char lineBuffer[kBufferSize];
+    while( fgets(lineBuffer, kBufferSize, file) != NULL )
     {
-        if( strcmp(rawName, kMapRawToPrettyGameName[ii].rawName) == 0 )
-            return kMapRawToPrettyGameName[ii].prettyName;
+        if( lineBuffer[0] == 0 || lineBuffer[0] == '#' )
+            continue;
+    
+        const char* rawNamePart = lineBuffer;
+        
+        char* equals = strchr(lineBuffer, '=');
+        if( equals == NULL )
+            continue;
+            
+        *equals = 0;
+        
+        char* end = equals - 1;
+        while( end >= rawNamePart && isspace(*end) )
+            *end-- = 0;
+            
+        if( strcmp(rawNamePart, rawName.c_str()) != 0 )
+            continue;
+            
+        char* prettyNamePart = equals + 1;
+        
+        while( isspace(*prettyNamePart) )
+            prettyNamePart++;
+        
+        end = prettyNamePart + strlen(prettyNamePart);
+        while( end >= prettyNamePart && !isprint(*end))
+            *end-- = 0;
+        
+        return prettyNamePart;
     }
+
     return rawName;
 };
 
@@ -104,7 +129,6 @@ void GameBoyState::SetGamePath(const char* path)
             break;
     }
     _options->rawGameName = rawGameName;
-    _options->prettyGameName = FindPrettyGameName(rawGameName);
     
     _memory->SetRom( buffer );
     
@@ -124,6 +148,10 @@ void GameBoyState::SetMediaPath(const char* path)
 
 void GameBoyState::ReloadMedia()
 {
+    _options->prettyGameName = FindPrettyGameName(
+        _options->mediaPath,
+        _options->rawGameName);
+
     _gpu->ClearReplacementTiles();
     _gpu->LoadReplacementTiles();
 }
@@ -369,6 +397,11 @@ void GameBoyState::ToggleRenderer()
     _multiRenderer->NextRenderer();
 }
 
+void GameBoyState::DumpTiles()
+{
+    _options->dumpTilesOnce = true;
+}
+
 // C interface
 
 struct GameBoyState* GameBoyState_Create()
@@ -457,5 +490,11 @@ void GameBoyState_ToggleRenderer( struct GameBoyState* gb )
 {
     if( gb == NULL ) return;
     gb->ToggleRenderer();
+}
+
+void GameBoyState_DumpTiles( struct GameBoyState* gb )
+{
+    if( gb == NULL ) return;
+    gb->DumpTiles();
 }
 

@@ -23,7 +23,7 @@ public:
     std::string rawGameName;
     std::string prettyGameName;
     std::string mediaPath;
-    bool dumpTiles;
+    bool dumpTilesOnce;
     
 private:
     void ParseLongOptionFlag( const char* flag, int* ioArgIndex, int argCount, char const* const* args );
