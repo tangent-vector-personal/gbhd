@@ -28,6 +28,8 @@ public:
     
     void SetGamePath(const char* path);
     void SetMediaPath(const char* path);
+    
+    void ReloadMedia();
 
     // Start/stop emulation
     void Start();

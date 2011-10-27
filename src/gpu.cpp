@@ -325,7 +325,10 @@ void GPUState::DumpTileImage( int tileIndex, UInt8 palette )
     char nameBuffer[1024];
     char* nameCursor = nameBuffer;
 
-    sprintf(nameCursor, "media/%s", options.prettyGameName.c_str());
+    sprintf(nameCursor,
+        "%s/%s",
+        options.mediaPath.c_str(),
+        options.prettyGameName.c_str());
     nameCursor += strlen(nameCursor);
     
     MakeDirectory(nameBuffer);
@@ -449,14 +452,16 @@ static int HexDigit( char c )
 void GPUState::LoadReplacementTiles()
 {
     char nameBuffer[1024];
-    sprintf(nameBuffer, "media/%s/replace/replace.txt", options.prettyGameName.c_str());
+    sprintf(nameBuffer, "%s/%s/replace/replace.txt",
+        options.mediaPath.c_str(),
+        options.prettyGameName.c_str());
     
     FILE* file = fopen(nameBuffer, "r");
     if( file == NULL )
         return;
     char lineBuffer[1024];
     
-    TileCacheImage* image;
+    TileCacheImage* image = NULL;
     RectF rect;
     UInt8 palette[4] = { 0, 1, 2, 3 };
     TileImageLayer layer = kTileImageLayer_Background;
@@ -476,6 +481,8 @@ void GPUState::LoadReplacementTiles()
         if( strcmp(cmd, "image") == 0 )
         {
             const char* fileName = strtok(NULL, delim);
+            if( image != NULL )
+                image->Release();
             image = LoadReplacementImage(
                 fileName,
                 layer,
@@ -525,6 +532,9 @@ void GPUState::LoadReplacementTiles()
         }
     }
     fclose(file);
+    
+    if( image != NULL )
+        image->Release();
 }
 
 void GPUState::ClearReplacementTiles()
@@ -585,7 +595,9 @@ TileCacheImage* GPUState::LoadReplacementImage(
     const UInt8* palette )
 {
     char nameBuffer[1024];
-    sprintf(nameBuffer, "media/%s/replace/%s", options.prettyGameName.c_str(), name);
+    sprintf(nameBuffer, "%s/%s/replace/%s",
+        options.mediaPath.c_str(),
+        options.prettyGameName.c_str(), name);
     
     FILE* file = fopen(nameBuffer, "rb");
     
@@ -700,7 +712,7 @@ TileCacheImage* GPUState::LoadReplacementImage(
     int palEntryCount = palEntries.size();
     if( palEntries[0].value != 0.0f )
     {
-        fprintf(stderr, "No palette entry with value 0.0 for image %s!\n", name);
+//        fprintf(stderr, "No palette entry with value 0.0 for image %s!\n", name);
         PaletteEntry entry;
         entry.value = 0.0f;
         Color color = { 0, 0, 0, 0 };
@@ -710,7 +722,7 @@ TileCacheImage* GPUState::LoadReplacementImage(
     }
     if( palEntries[palEntryCount-1].value != 1.0f )
     {
-        fprintf(stderr, "No palette entry with value 1.0 for image %s!\n", name);
+//        fprintf(stderr, "No palette entry with value 1.0 for image %s!\n", name);
         
         // Start adding up other entries, to see if we
         // can get something that adds up to ou
@@ -817,6 +829,8 @@ void GPUState::LoadReplacementTile(
     TileCacheImage* image,
     const RectF& rect )
 {
+    image->Acquire();
+
     TileCacheNode* node = tileCaches[layer];
     const char* n = name;
     while( *n != 0 )
@@ -827,7 +841,7 @@ void GPUState::LoadReplacementTile(
     TileCacheSubImage oldSubImage = node->GetSubImage( layer );
     if( oldSubImage.image != NULL )
     {
-        fprintf(stderr, "Need to clean up memory here, boss!\n");
+        oldSubImage.image->Release();
     }
     
     TileCacheSubImage subImage(image, rect);
@@ -859,9 +873,31 @@ void GPUState::SetLcdMode( LcdMode mode )
 //
 
 TileCacheImage::TileCacheImage()
+    : _referenceCount(1)
 {
     textureID = 0;
 }
+
+TileCacheImage::~TileCacheImage()
+{
+    if( textureID != 0 )
+    {
+        glDeleteTextures(1, &textureID);
+    }
+}
+
+void TileCacheImage::Acquire()
+{
+    _referenceCount++;
+}
+
+void TileCacheImage::Release()
+{
+    _referenceCount--;
+    if( _referenceCount == 0 )
+        delete this;
+}
+
 
 void TileCacheImage::SetImageData(int width, int height, const Color* data)
 {
@@ -948,7 +984,10 @@ void TileCacheNode::ClearReplacementTiles()
     for( int ii = 0; ii < kTileImageLayerCount; ++ii )
     {
         if( images[ii].image != NULL )
-            images[ii].image->ClearReplacementImage();
+        {
+            images[ii].image->Release();
+            images[ii].image = NULL;
+        }
     }
 
     for( int ii = 0; ii < 16; ++ii )

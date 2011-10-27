@@ -109,20 +109,25 @@ void GameBoyState::SetGamePath(const char* path)
     _memory->SetRom( buffer );
     
     _mode = kMode_Off;
-    
-    
+        
     // Now reset the state of the machine...
+    ReloadMedia();
     Reset();
 }
 
 void GameBoyState::SetMediaPath(const char* path)
 {
-    _gpu->ClearReplacementTiles();
-    
     _options->mediaPath = path;
     
+    ReloadMedia();
+}
+
+void GameBoyState::ReloadMedia()
+{
+    _gpu->ClearReplacementTiles();
     _gpu->LoadReplacementTiles();
 }
+
 
 void GameBoyState::Start()
 {

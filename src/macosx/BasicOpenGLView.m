@@ -316,7 +316,10 @@ static CVReturn DisplayLinkCallback(
                 NSString* path = [url path];
                 const char* str = [path UTF8String];
                 
+                [lock lock];
+                [[self openGLContext] makeCurrentContext];
                 GameBoyState_SetMediaPath(gb, str);
+                [lock unlock];
             }
         }];
 }

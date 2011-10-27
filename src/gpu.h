@@ -31,6 +31,8 @@ class TileCacheImage
 {
 public:
     TileCacheImage();
+    void Acquire();
+    void Release();
     
     void SetImageData(int width, int height, const Color* data );
 
@@ -41,7 +43,9 @@ public:
     uint32_t GetTextureID();
     
 private:
+    ~TileCacheImage();
 
+    uint32_t _referenceCount;
     uint32_t textureID;
 };
 
