@@ -20,7 +20,6 @@
 		7EE963AC145363E500E00677 /* BasicOpenGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963AB145363E500E00677 /* BasicOpenGLView.m */; };
 		7EE963B31453646200E00677 /* cpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963AE1453646200E00677 /* cpu.cpp */; };
 		7EE963B41453646200E00677 /* gpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963B11453646200E00677 /* gpu.cpp */; };
-		7EE963C21453646F00E00677 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963B51453646F00E00677 /* main.cpp */; };
 		7EE963C31453646F00E00677 /* memory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963B61453646F00E00677 /* memory.cpp */; };
 		7EE963C41453646F00E00677 /* options.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963BA1453646F00E00677 /* options.cpp */; };
 		7EE963C51453646F00E00677 /* pad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7EE963BC1453646F00E00677 /* pad.cpp */; };
@@ -65,7 +64,6 @@
 		7EE963AF1453646200E00677 /* cpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cpu.h; path = ../../../src/cpu.h; sourceTree = "<group>"; };
 		7EE963B11453646200E00677 /* gpu.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gpu.cpp; path = ../../../src/gpu.cpp; sourceTree = "<group>"; };
 		7EE963B21453646200E00677 /* gpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gpu.h; path = ../../../src/gpu.h; sourceTree = "<group>"; };
-		7EE963B51453646F00E00677 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = ../../../src/main.cpp; sourceTree = "<group>"; };
 		7EE963B61453646F00E00677 /* memory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = memory.cpp; path = ../../../src/memory.cpp; sourceTree = "<group>"; };
 		7EE963B71453646F00E00677 /* memory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = memory.h; path = ../../../src/memory.h; sourceTree = "<group>"; };
 		7EE963B81453646F00E00677 /* opcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = opcodes.h; path = ../../../src/opcodes.h; sourceTree = "<group>"; };
@@ -99,7 +97,7 @@
 		7E3F29F1145272EE004C0966 = {
 			isa = PBXGroup;
 			children = (
-				7E3F2A06145272EE004C0966 /* gbhd */,
+				7E3F2A06145272EE004C0966 /* src */,
 				7E3F29FF145272EE004C0966 /* Frameworks */,
 				7E3F29FD145272EE004C0966 /* Products */,
 			);
@@ -116,22 +114,29 @@
 		7E3F29FF145272EE004C0966 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7E3F2A03145272EE004C0966 /* AppKit.framework */,
+				7E3F2A00145272EE004C0966 /* Cocoa.framework */,
+				7E3F2A04145272EE004C0966 /* CoreData.framework */,
 				7EC5140B1453D2C600364853 /* CoreVideo.framework */,
+				7E3F2A05145272EE004C0966 /* Foundation.framework */,
 				7EE963C71453666800E00677 /* libpng15.framework */,
 				7EBFBD4C14527E3F00B8A31C /* OpenGL.framework */,
-				7E3F2A03145272EE004C0966 /* AppKit.framework */,
-				7E3F2A04145272EE004C0966 /* CoreData.framework */,
-				7E3F2A05145272EE004C0966 /* Foundation.framework */,
-				7E3F2A00145272EE004C0966 /* Cocoa.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		7E3F2A06145272EE004C0966 /* gbhd */ = {
+		7E3F2A06145272EE004C0966 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				7EE963B51453646F00E00677 /* main.cpp */,
+				7E47CE281459123800784384 /* macosx */,
+				7EE963AD1453646200E00677 /* cbopcodes.h */,
+				7EE963AE1453646200E00677 /* cpu.cpp */,
+				7EE963AF1453646200E00677 /* cpu.h */,
 				7E47CE2514561E1200784384 /* gb.cpp */,
+				7E47CE2314561DFB00784384 /* gb.h */,
+				7EE963B11453646200E00677 /* gpu.cpp */,
+				7EE963B21453646200E00677 /* gpu.h */,
+				7E47CE271456201E00784384 /* keys.h */,
 				7EE963B61453646F00E00677 /* memory.cpp */,
 				7EE963B71453646F00E00677 /* memory.h */,
 				7EE963B81453646F00E00677 /* opcodes.h */,
@@ -144,31 +149,32 @@
 				7EE963BF1453646F00E00677 /* timer.cpp */,
 				7EE963C01453646F00E00677 /* timer.h */,
 				7EE963C11453646F00E00677 /* types.h */,
-				7EE963AD1453646200E00677 /* cbopcodes.h */,
-				7EE963AE1453646200E00677 /* cpu.cpp */,
-				7EE963AF1453646200E00677 /* cpu.h */,
-				7EE963B11453646200E00677 /* gpu.cpp */,
-				7EE963B21453646200E00677 /* gpu.h */,
-				7EE963AA145363E500E00677 /* BasicOpenGLView.h */,
-				7EE963AB145363E500E00677 /* BasicOpenGLView.m */,
-				7EBFBD3A145273DF00B8A31C /* MainMenu.xib */,
-				7EBFBD32145273BD00B8A31C /* AppDelegate.h */,
-				7EBFBD33145273BD00B8A31C /* AppDelegate.m */,
-				7E3F2A07145272EE004C0966 /* Supporting Files */,
-				7E47CE2314561DFB00784384 /* gb.h */,
-				7E47CE271456201E00784384 /* keys.h */,
 			);
+			name = src;
 			path = gbhd;
 			sourceTree = "<group>";
 		};
-		7E3F2A07145272EE004C0966 /* Supporting Files */ = {
+		7E47CE281459123800784384 /* macosx */ = {
+			isa = PBXGroup;
+			children = (
+				7E47CE29145912AA00784384 /* en.lproj */,
+				7EBFBD32145273BD00B8A31C /* AppDelegate.h */,
+				7EBFBD33145273BD00B8A31C /* AppDelegate.m */,
+				7EE963AA145363E500E00677 /* BasicOpenGLView.h */,
+				7EE963AB145363E500E00677 /* BasicOpenGLView.m */,
+				7EBFBD37145273CA00B8A31C /* gbhd-Info.plist */,
+				7EBFBD34145273BD00B8A31C /* main.m */,
+			);
+			name = macosx;
+			sourceTree = "<group>";
+		};
+		7E47CE29145912AA00784384 /* en.lproj */ = {
 			isa = PBXGroup;
 			children = (
 				7EBFBD40145273FB00B8A31C /* InfoPlist.strings */,
-				7EBFBD34145273BD00B8A31C /* main.m */,
-				7EBFBD37145273CA00B8A31C /* gbhd-Info.plist */,
+				7EBFBD3A145273DF00B8A31C /* MainMenu.xib */,
 			);
-			name = "Supporting Files";
+			name = en.lproj;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -240,7 +246,6 @@
 				7EE963AC145363E500E00677 /* BasicOpenGLView.m in Sources */,
 				7EE963B31453646200E00677 /* cpu.cpp in Sources */,
 				7EE963B41453646200E00677 /* gpu.cpp in Sources */,
-				7EE963C21453646F00E00677 /* main.cpp in Sources */,
 				7EE963C31453646F00E00677 /* memory.cpp in Sources */,
 				7EE963C41453646F00E00677 /* options.cpp in Sources */,
 				7EE963C51453646F00E00677 /* pad.cpp in Sources */,
