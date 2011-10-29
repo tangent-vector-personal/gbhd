@@ -1415,10 +1415,10 @@ static float lerp( float a, float b, float t )
 
 void DefaultRenderer::DrawTileMap( TileMapState* tileMap, TileImageLayer layer )
 {
+    TileCacheImage* lastImage = NULL;
+
     for( int jj = 0; jj < kMaxVisibleTilesPerLine; ++jj )
-    {
-        TileCacheImage* lastImage = NULL;
-    
+    {    
         for( int ii = 0; ii < kNativeScreenHeight; ++ii )
         {
             const TileMapState& state = tileMap[ii];
@@ -1471,11 +1471,11 @@ void DefaultRenderer::DrawTileMap( TileMapState* tileMap, TileImageLayer layer )
             glTexCoord2f(tMaxX, tMinY);
             glVertex2f(sMaxX, sMinY);
         }
-        
-        if( lastImage != NULL )
-        {
-            glEnd();
-        }
+    }
+
+    if( lastImage != NULL )
+    {
+        glEnd();
     }
 }
 
