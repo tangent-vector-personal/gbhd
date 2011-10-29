@@ -5,6 +5,9 @@
 
 #include <cassert>
 
+// Need a better place for this:
+FILE* gLogFile = NULL;
+
 Options::Options()
     : dumpTilesOnce(false)
 {}
