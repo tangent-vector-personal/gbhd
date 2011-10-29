@@ -358,13 +358,11 @@ void GameBoyState::RenderGL( int width, int height )
     glColor4f(0, 0, 0, 1);
     if( currentAspectRatio > kNativeAspectRatio )
     {
-    glColor4f(1, 0, 0, 1);
         glRectf(-extraW, -extraH, 0, kNativeScreenHeight+extraH);
         glRectf(kNativeScreenWidth, -extraH, kNativeScreenWidth+extraW, kNativeScreenHeight+extraH);
     }
     else
     {
-    glColor4f(0, 1, 0, 1);
         glRectf(-extraW, -extraH, kNativeScreenWidth + extraW, 0);        
         glRectf(-extraW, kNativeScreenHeight, kNativeScreenWidth + extraW, kNativeScreenHeight+extraH);
     }
