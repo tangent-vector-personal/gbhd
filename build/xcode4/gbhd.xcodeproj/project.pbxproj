@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		7E3F2A01145272EE004C0966 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E3F2A00145272EE004C0966 /* Cocoa.framework */; };
 		7E47CE2614561E1200784384 /* gb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7E47CE2514561E1200784384 /* gb.cpp */; };
+		7EA2BA0F145B7C2B00B9ACFF /* readme.txt in Resources */ = {isa = PBXBuildFile; fileRef = 7EA2BA0E145B7C2B00B9ACFF /* readme.txt */; };
 		7EBFBD35145273BD00B8A31C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 7EBFBD33145273BD00B8A31C /* AppDelegate.m */; };
 		7EBFBD36145273BD00B8A31C /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 7EBFBD34145273BD00B8A31C /* main.m */; };
 		7EBFBD39145273CA00B8A31C /* gbhd-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7EBFBD37145273CA00B8A31C /* gbhd-Info.plist */; };
@@ -49,6 +50,7 @@
 		7E47CE2314561DFB00784384 /* gb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gb.h; path = ../../../src/gb.h; sourceTree = "<group>"; };
 		7E47CE2514561E1200784384 /* gb.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gb.cpp; path = ../../../src/gb.cpp; sourceTree = "<group>"; };
 		7E47CE271456201E00784384 /* keys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = keys.h; path = ../../../src/keys.h; sourceTree = "<group>"; };
+		7EA2BA0E145B7C2B00B9ACFF /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = readme.txt; path = ../../readme.txt; sourceTree = "<group>"; };
 		7EBFBD32145273BD00B8A31C /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = ../../../src/macosx/AppDelegate.h; sourceTree = "<group>"; };
 		7EBFBD33145273BD00B8A31C /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = ../../../src/macosx/AppDelegate.m; sourceTree = "<group>"; };
 		7EBFBD34145273BD00B8A31C /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = ../../../src/macosx/main.m; sourceTree = "<group>"; };
@@ -97,6 +99,7 @@
 		7E3F29F1145272EE004C0966 = {
 			isa = PBXGroup;
 			children = (
+				7EA2BA0E145B7C2B00B9ACFF /* readme.txt */,
 				7E3F2A06145272EE004C0966 /* src */,
 				7E3F29FF145272EE004C0966 /* Frameworks */,
 				7E3F29FD145272EE004C0966 /* Products */,
@@ -231,6 +234,7 @@
 				7EBFBD39145273CA00B8A31C /* gbhd-Info.plist in Resources */,
 				7EBFBD3C145273DF00B8A31C /* MainMenu.xib in Resources */,
 				7EBFBD43145273FB00B8A31C /* InfoPlist.strings in Resources */,
+				7EA2BA0F145B7C2B00B9ACFF /* readme.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
