@@ -147,6 +147,28 @@ float4 objFragmentMain(
 }
 )";
 
+// Note: the tile and object cases above rely on the fact that
+// we are using the R,G,B, and A components of colors to hold
+// the data related to palette indices 1, 2, 3, and *0*,
+// respectively (note how index 0 has been swapped over to the
+// alpha component).
+//
+// For background-related stuff, all four palette indices matter,
+// and we perform a dot product between the weights stored in
+// the texel color and the values associated with each
+// palette entry. The result is used to establish the color of
+// any output that gets written.
+// TODO: the alpha should probably always be 1.0 for those...
+//
+// For object stuff, it needs to use the alpha channel to store
+// actual transparency info, but that works because palette
+// index 0 is used in those cases to represent a fully
+// transparent color (independent of what is written in the
+// palette data itself). In the object case we use the
+// alpha value from the texel as-is, and just do a dot
+// product to sum the contributions for the other three
+// components.
+
 int compileShader(
     const char* source,
     const char* entryPointName,
