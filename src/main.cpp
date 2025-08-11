@@ -127,13 +127,23 @@ Vertex vertexMain(
 }
 Texture2D texImage : register(t0);
 SamplerState samplerState : register(s0);
-float4 fragmentMain(
+float4 tileFragmentMain(
     Vertex vertex)
     : SV_Target
 {
     float4 vertexColor = vertex.color;
     float4 textureColor = texImage.Sample(samplerState, vertex.texCoord);
-    return textureColor;
+    return dot(vertexColor, textureColor);
+}
+float4 objFragmentMain(
+    Vertex vertex)
+    : SV_Target
+{
+    float4 vertexColor = vertex.color;
+    float4 textureColor = texImage.Sample(samplerState, vertex.texCoord);
+    float3 color = dot(textureColor.xyz, vertexColor.xyz);
+    float alpha = textureColor.w;
+    return float4(color, alpha);
 }
 )";
 
@@ -199,7 +209,7 @@ int initVertexShader()
 int initFragmentShader()
 {
     ComPtr<ID3DBlob> compiledCode;
-    if (FAILED(compileShader(kShaderSource, "fragmentMain", "ps_4_0", compiledCode)))
+    if (FAILED(compileShader(kShaderSource, "tileFragmentMain", "ps_4_0", compiledCode)))
         return E_FAIL;
 
     if (FAILED(_d3dDevice->CreatePixelShader(

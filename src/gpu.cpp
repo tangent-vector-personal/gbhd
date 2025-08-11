@@ -1769,11 +1769,11 @@ void DefaultRenderer::drawRectangle(
     */
 
     drawVertex(texture, sMinX, sMinY, tMinX, tMinY, palette); // 0
-    drawVertex(texture, sMinX, sMaxY, tMinX, tMaxY, palette); // 1
     drawVertex(texture, sMaxX, sMaxY, tMaxX, tMaxY, palette); // 2
+    drawVertex(texture, sMinX, sMaxY, tMinX, tMaxY, palette); // 1
 
-    drawVertex(texture, sMinX, sMinY, tMinX, tMinY, palette); // extra 0
     drawVertex(texture, sMaxX, sMaxY, tMaxX, tMaxY, palette); // extra 2
+    drawVertex(texture, sMinX, sMinY, tMinX, tMinY, palette); // extra 0
 
     drawVertex(texture, sMaxX, sMinY, tMaxX, tMinY, palette); // 3
 }
@@ -1806,6 +1806,8 @@ void DefaultRenderer::drawVertex(
 
     sX -= 1.0f;
     sY -= 1.0f;
+
+    sY = -sY;
 
     GBVertex vertex;
     vertex.position[0] = sX;
