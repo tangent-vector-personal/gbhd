@@ -1,4 +1,4 @@
-// Copyright 2011 Tim Foley. All rights reserved.
+// Copyright 2011 Theresa Foley. All rights reserved.
 //
 // cpu.h
 
