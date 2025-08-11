@@ -788,7 +788,7 @@ void Z80State::DAA()
             postC = true;
         }
     }
-    UInt8 result = tmp;
+    UInt8 result = UInt8(tmp);
     A = result;
     
     SetFlag( kFlag_Z, result == 0 );

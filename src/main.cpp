@@ -17,6 +17,13 @@
 
 #include "png.h"
 
+#include <SDL3/SDL_main.h>
+#include <SDL3/SDL_log.h>
+#include <SDL3/SDL_time.h>
+
+#include "gb.h"
+
+#if 0
 FILE* gLogFile = NULL;
 
 Z80State* gCpu = NULL;
@@ -147,6 +154,7 @@ static void DumpPngScreenShot(
     
     counter++;
     
+#if 0
     // Now write out an actual PNG file
     FILE* file = fopen(name, "wb");
     if( file == NULL )
@@ -198,6 +206,7 @@ static void DumpPngScreenShot(
     
     fclose(file);
     
+#endif
 }
 
 extern "C" void DrawCore( int width, int height );
@@ -208,6 +217,8 @@ void DrawCore( int width, int height )
 
 //    AdvanceFrame();
     gGpu->flip = false;
+
+#if 0
 
     glClearColor(1.0, 1.0, 1.0, 1.0);
     glClearStencil( 0 );
@@ -284,6 +295,7 @@ void DrawCore( int width, int height )
     }
     
 //    glutSwapBuffers();
+#endif
 }
 
 extern "C" void UpdateCore(int deltaTime);
@@ -292,6 +304,7 @@ void UpdateCore(int deltaTime)
 {
     if( gCpu == NULL )
         return;
+
 /*
     static int lastTime = 0;
     int timeInMS = glutGet( GLUT_ELAPSED_TIME );
@@ -487,3 +500,178 @@ void InitCore(const char* str)
     gpu->LoadReplacementTiles();
 }
 #endif
+
+#endif
+
+SDL_Window* gWindow = nullptr;
+GameBoyState* gConsoleState = nullptr;
+
+void handleConsoleKeyEvent(
+    SDL_KeyboardEvent const& event,
+    Key consoleKey)
+{
+    switch (event.type)
+    {
+    default:
+        throw std::exception("unexpected");
+
+    case SDL_EVENT_KEY_DOWN:
+        GameBoyState_KeyDown(gConsoleState, consoleKey);
+        break;
+
+    case SDL_EVENT_KEY_UP:
+        GameBoyState_KeyUp(gConsoleState, consoleKey);
+        break;
+    }
+}
+
+void handleKeyEvent(SDL_KeyboardEvent const& event)
+{
+    switch (event.scancode)
+    {
+    case SDL_SCANCODE_UP:
+        handleConsoleKeyEvent(event, kKey_Up);
+        break;
+
+    case SDL_SCANCODE_DOWN:
+        handleConsoleKeyEvent(event, kKey_Down);
+        break;
+
+    case SDL_SCANCODE_LEFT:
+        handleConsoleKeyEvent(event, kKey_Left);
+        break;
+
+    case SDL_SCANCODE_RIGHT:
+        handleConsoleKeyEvent(event, kKey_Right);
+        break;
+
+    case SDL_SCANCODE_B:
+        handleConsoleKeyEvent(event, kKey_B);
+        break;
+
+    case SDL_SCANCODE_A:
+        handleConsoleKeyEvent(event, kKey_A);
+        break;
+
+    case SDL_SCANCODE_TAB:
+        handleConsoleKeyEvent(event, kKey_Select);
+        break;
+
+    case SDL_SCANCODE_RETURN:
+        handleConsoleKeyEvent(event, kKey_Start);
+        break;
+
+    case SDL_SCANCODE_ESCAPE:
+        exit(0);
+        break;
+
+    case SDL_SCANCODE_SPACE:
+        GameBoyState_TogglePause(gConsoleState);
+        break;
+    }
+
+}
+
+void handlePlatformEvent(SDL_Event const& event)
+{
+    switch (event.type)
+    {
+    default:
+        break;
+
+    case SDL_EVENT_KEY_DOWN:
+    case SDL_EVENT_KEY_UP:
+        handleKeyEvent(event.key);
+        break;
+
+    case SDL_EVENT_QUIT:
+        exit(0);
+        return;
+    }
+
+}
+
+void handlePlatformEvents()
+{
+    SDL_Event event;
+    while (SDL_PollEvent(&event))
+    {
+        handlePlatformEvent(event);
+    }
+}
+
+void simulateAndRenderFrame()
+{
+    SDL_Time currentInstant;
+    SDL_GetCurrentTime(&currentInstant);
+
+    // `SDL_Time` is in units of nanoseconds.
+    //
+    UInt64 currentInstantNumerator = currentInstant;
+    UInt64 currentInstantDenominator = 1'000'000'000ull;
+
+    GameBoyState_Update(
+        gConsoleState,
+        currentInstantNumerator,
+        currentInstantDenominator);
+
+    int windowClientAreaWidth = 0;
+    int windowClientAreaHeight = 0;
+    SDL_GetWindowSizeInPixels(
+        gWindow,
+        &windowClientAreaWidth,
+        &windowClientAreaHeight);
+
+    GameBoyState_RenderGL(
+        gConsoleState,
+        windowClientAreaWidth,
+        windowClientAreaHeight);
+}
+
+void runMainLoop()
+{
+    for (;;)
+    {
+        handlePlatformEvents();
+
+        simulateAndRenderFrame();
+    }
+}
+
+int main(
+    int argc,
+    char** argv)
+{
+    SDL_SetAppMetadata("gbhd", "0.0", "com.tess-factor.gbhd");
+
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
+        return EXIT_FAILURE;
+    }
+
+
+    SDL_WindowFlags windowFlags = 0;
+    gWindow = SDL_CreateWindow("gbhd", 160, 144, windowFlags);
+    if (!gWindow)
+    {
+        SDL_Log("failed to create window: %s", SDL_GetError());
+        return EXIT_FAILURE;
+    }
+
+    gConsoleState = GameBoyState_Create();
+    if (!gConsoleState)
+    {
+        SDL_Log("failed to create Game Boy state");
+        return EXIT_FAILURE;
+    }
+
+    GameBoyState_SetMediaPath(gConsoleState, "./media/");
+    GameBoyState_SetGamePath(gConsoleState, "./external/game-boy-test-roms/bully/bully.gb");
+
+    GameBoyState_Reset(gConsoleState);
+    GameBoyState_Start(gConsoleState);
+
+    runMainLoop();
+
+    return EXIT_SUCCESS;
+}

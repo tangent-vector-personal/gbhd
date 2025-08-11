@@ -6,8 +6,10 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <filesystem>
 #include <map>
 #include <string>
+#include <sstream>
 #include <vector>
 
 #include "png.h"
@@ -321,49 +323,46 @@ void GPUState::DumpTileImage( int tileIndex, UInt8 palette )
     static const int kTileSizeInBytes = 16;
     
     static std::map<std::string, int> sMap;
-    
-    char nameBuffer[1024];
-    char* nameCursor = nameBuffer;
 
-    sprintf(nameCursor,
-        "%s/%s",
-        options.mediaPath.c_str(),
-        options.prettyGameName.c_str());
-    nameCursor += strlen(nameCursor);
-    
-    MakeDirectory(nameBuffer);
+    std::filesystem::path mediaDirectoryPath = options.mediaPath;
+    auto gameDirectoryPath = mediaDirectoryPath / options.prettyGameName;
+    auto dumpDirectoryPath = gameDirectoryPath / "dump";
 
-    sprintf(nameCursor, "/dump");
-    nameCursor += strlen(nameCursor);
-    
-    MakeDirectory(nameBuffer);
-    
-    sprintf(nameCursor, "/");
-    nameCursor += strlen(nameCursor);
-    
+    std::filesystem::create_directories(dumpDirectoryPath);
+
+    std::ostringstream imageFileNameBuilder;
     for( int ii = 0; ii < kTileSizeInBytes; ++ii )
     {
         UInt8 tileData = vram[ tileIndex*16 + ii ];
-        sprintf(nameCursor, "%02x", tileData);
-        nameCursor += strlen(nameCursor);
+
+        // TODO: just format this the C++ way...
+
+        char buffer[4];
+        sprintf_s(buffer, "%02x", tileData);
+
+        imageFileNameBuilder << buffer;
     }
-    sprintf(nameCursor, "p");
-    nameCursor += strlen(nameCursor);
+    imageFileNameBuilder << "p";
     for( int ii = 0; ii < 4; ++ii )
     {
         UInt8 colorValue = (palette >> (ii*2)) & 0x3;
-        sprintf(nameCursor, "%01x", colorValue);
-        nameCursor += strlen(nameCursor);
-    }
-    sprintf(nameCursor, ".png");
 
-    if( sMap.find(nameBuffer) != sMap.end() )
+        char buffer[4];
+        sprintf_s(buffer, "%01x", colorValue);
+
+        imageFileNameBuilder << buffer;
+    }
+    imageFileNameBuilder << ".png";
+
+    auto imageFileName = imageFileNameBuilder.str();
+
+    if( sMap.find(imageFileName) != sMap.end() )
         return;
-        
-    sMap[nameBuffer] = 1;
-    
+
+    sMap[imageFileName] = 1;
+
     // Compute a pixel representation
-    
+
     static const int kTileWidth = 8;
     static const int kTileHeight = 8;
     Color rows[kTileHeight][kTileWidth];
@@ -391,11 +390,12 @@ void GPUState::DumpTileImage( int tileIndex, UInt8 palette )
         }
     }
 
+#if 0
     // Now write out an actual PNG file
     FILE* file = fopen(nameBuffer, "wb");
     if( file == NULL )
         throw 1;
-    
+
     png_structp pngContext = png_create_write_struct(
         PNG_LIBPNG_VER_STRING,
         NULL,
@@ -431,8 +431,9 @@ void GPUState::DumpTileImage( int tileIndex, UInt8 palette )
     png_write_image(pngContext, rowPointers);
     
     png_write_end(pngContext, NULL);
-    
+
     fclose(file);
+#endif
 }
 
 static int HexDigit( char c )
@@ -451,12 +452,13 @@ static int HexDigit( char c )
 
 void GPUState::LoadReplacementTiles()
 {
-    char nameBuffer[1024];
-    sprintf(nameBuffer, "%s/%s/replace/replace.txt",
-        options.mediaPath.c_str(),
-        options.prettyGameName.c_str());
-    
-    FILE* file = fopen(nameBuffer, "r");
+    auto replacementFilePath =
+        std::filesystem::path(options.mediaPath)
+        / options.prettyGameName
+        / "replace"
+        / "replace.txt";
+
+    FILE* file = fopen(replacementFilePath.u8string().c_str(), "r");
     if( file == NULL )
         return;
     char lineBuffer[1024];
@@ -601,6 +603,9 @@ TileCacheImage* GPUState::LoadReplacementImage(
     
     FILE* file = fopen(nameBuffer, "rb");
     
+#if 1
+    throw 99;
+#else
     UInt8 header[8];
     fread(header, 1, 8, file);
     if( png_sig_cmp(header, 0, 8) )
@@ -818,8 +823,9 @@ TileCacheImage* GPUState::LoadReplacementImage(
     TileCacheImage* image = new TileCacheImage();    
     
     image->SetImageData(width, height, &data[0]);
-    
+
     return image;
+#endif
 }
 
 
@@ -880,10 +886,12 @@ TileCacheImage::TileCacheImage()
 
 TileCacheImage::~TileCacheImage()
 {
+#if 0
     if( textureID != 0 )
     {
         glDeleteTextures(1, &textureID);
     }
+#endif
 }
 
 void TileCacheImage::Acquire()
@@ -901,6 +909,7 @@ void TileCacheImage::Release()
 
 void TileCacheImage::SetImageData(int width, int height, const Color* data)
 {
+#if 0
     if( textureID == 0 )
         glGenTextures(1, &textureID);
             
@@ -910,6 +919,7 @@ void TileCacheImage::SetImageData(int width, int height, const Color* data)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#endif
 }
 
 void TileCacheImage::ClearReplacementImage()
@@ -1080,6 +1090,7 @@ static const char* kObjFragmentShaderSource =
 "}\n"
 "\n";
 
+#if 0
 static GLuint CreateShader( GLenum type, const char* source )
 {
     GLuint shader = glCreateShader(type);
@@ -1127,25 +1138,32 @@ static GLuint CreateProgram(
     glUseProgram(0);
     return program;
 }
+#endif
 
 HighResRenderer::HighResRenderer()
 {
+#if 0
     _mapProgram = CreateProgram(kVertexShaderSource, kMapFragmentShaderSource);
     _objProgram = CreateProgram(kVertexShaderSource, kObjFragmentShaderSource);
+#endif
 }
 
 void HighResRenderer::BindMapProgram()
 {
+#if 0
     glUseProgram(_mapProgram);
     GLint texMapLoc = glGetUniformLocation(_mapProgram, "texMap");
     glUniform1i(texMapLoc, 0);
+#endif
 }
 
 void HighResRenderer::BindObjProgram()
 {
+#if 0
     glUseProgram(_objProgram);
     GLint texMapLoc = glGetUniformLocation(_objProgram, "texMap");
     glUniform1i(texMapLoc, 0);
+#endif
 }
 
 // DefaultRenderer
@@ -1345,6 +1363,7 @@ void DefaultRenderer::Swap()
     
 void DefaultRenderer::PresentGL()
 {
+#if 0
     glDisable(GL_DEPTH_TEST);
 
     glColor4f(1,1,1,1);
@@ -1406,6 +1425,7 @@ void DefaultRenderer::PresentGL()
     glUseProgram(0);
     
     glDisable(GL_BLEND);
+#endif
 }
 
 static float lerp( float a, float b, float t )
@@ -1429,6 +1449,7 @@ void DefaultRenderer::DrawTileMap( TileMapState* tileMap, TileImageLayer layer )
             TileCacheImage* image = subImage.image;
             if( image != lastImage )
             {
+#if 0
                 if( lastImage != NULL )
                 {
                     glEnd();
@@ -1439,6 +1460,7 @@ void DefaultRenderer::DrawTileMap( TileMapState* tileMap, TileImageLayer layer )
                 lastImage = image;
                 
                 glBegin(GL_QUADS);
+#endif
             }
             
             float sMinX = state.screenPixelMinX + jj*8;
@@ -1456,7 +1478,8 @@ void DefaultRenderer::DrawTileMap( TileMapState* tileMap, TileImageLayer layer )
             tMaxX = lerp( rect.left, rect.right, tMaxX );
             tMinY = lerp( rect.top, rect.bottom, tMinY );
             tMaxY = lerp( rect.top, rect.bottom, tMaxY );
-            
+
+#if 0
             glColor4ubv((GLubyte*) &state.palette);
 
             glTexCoord2f(tMinX, tMinY);
@@ -1470,12 +1493,15 @@ void DefaultRenderer::DrawTileMap( TileMapState* tileMap, TileImageLayer layer )
 
             glTexCoord2f(tMaxX, tMinY);
             glVertex2f(sMaxX, sMinY);
+#endif
         }
     }
 
     if( lastImage != NULL )
     {
+#if 0
         glEnd();
+#endif
     }
 }
 
@@ -1497,7 +1523,9 @@ void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
             {
                 if( lastImage != NULL )
                 {
+#if 0
                     glEnd();
+#endif
                     lastImage = NULL;
                 }
                 continue;
@@ -1511,14 +1539,20 @@ void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
             {
                 if( lastImage != NULL )
                 {
+#if 0
                     glEnd();
+#endif
                 }
-            
+
+#if 0
                 glBindTexture(GL_TEXTURE_2D, image->GetTextureID());
-                
+#endif
+
                 lastImage = image;
                 
+#if 0
                 glBegin(GL_QUADS);
+#endif
             }
             
             float sMinX = state.screenPixelMinX;
@@ -1550,6 +1584,7 @@ void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
             tMinY = lerp( rect.top, rect.bottom, tMinY );
             tMaxY = lerp( rect.top, rect.bottom, tMaxY );
 
+#if 0
             glColor4ubv((GLubyte*) &state.palette);
 
             glTexCoord2f(tMinX, tMinY);
@@ -1563,10 +1598,13 @@ void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
 
             glTexCoord2f(tMaxX, tMinY);
             glVertex2f(sMaxX, sMinY);            
+#endif
         }
         if( lastImage != NULL )
         {
+#if 0
             glEnd();
+#endif
         }
     }
 //    glDisable(GL_BLEND);
@@ -1749,6 +1787,7 @@ void SimpleRenderer::Swap()
     
 void SimpleRenderer::PresentGL()
 {    
+#if 0
     glColor4f(1,1,1,1);
     
     FrameState& frameState = frameStates[displayFrameStateIndex];
@@ -1804,6 +1843,7 @@ void SimpleRenderer::PresentGL()
     DrawSprites( frameState, false );
     
     glUseProgram(0);
+#endif
 }
 
 void SimpleRenderer::DrawTileMap( TileMapState& tileMap, TileImageLayer layer )
@@ -1811,6 +1851,7 @@ void SimpleRenderer::DrawTileMap( TileMapState& tileMap, TileImageLayer layer )
     if( !tileMap.visible )
         return;
 
+#if 0
     for( int jj = 0; jj < 32; ++jj )
     {
         TileCacheImage* lastImage = NULL;
@@ -1869,10 +1910,12 @@ void SimpleRenderer::DrawTileMap( TileMapState& tileMap, TileImageLayer layer )
             glEnd();
         }
     }
+#endif
 }
 
 void SimpleRenderer::DrawSprites( FrameState& frameState, bool priority )
 {
+#if 0
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     for( int ii = 0; ii < 40; ++ii )
@@ -1957,18 +2000,22 @@ void SimpleRenderer::DrawSprites( FrameState& frameState, bool priority )
         }
     }
     glDisable(GL_BLEND);
+#endif
 }
 
 // AccurateRenderer
 
 static void CheckGL()
 {
+#if 0
     int err = glGetError();
     assert( err == 0 );
+#endif
 }
 
 AccurateRenderer::AccurateRenderer()
 {
+#if 0
     glGenTextures(1, &_frameBufferTex);
     glBindTexture(GL_TEXTURE_2D, _frameBufferTex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -1987,6 +2034,7 @@ AccurateRenderer::AccurateRenderer()
         GL_UNSIGNED_BYTE,
         &_frameBuffer[0][0]);
     CheckGL();
+#endif
 }
 
 bool operator<(
@@ -2191,6 +2239,7 @@ void AccurateRenderer::RenderBlankFrame()
 
 void AccurateRenderer::Swap()
 {
+#if 0
     glBindTexture(GL_TEXTURE_2D, _frameBufferTex);
     CheckGL();
     glTexSubImage2D(
@@ -2202,10 +2251,12 @@ void AccurateRenderer::Swap()
         GL_UNSIGNED_BYTE,
         &_frameBuffer[0][0]);
     CheckGL();
+#endif
 }
     
 void AccurateRenderer::PresentGL()
 {
+#if 0
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, _frameBufferTex);
     glColor4f(1, 1, 1, 1);
@@ -2222,6 +2273,7 @@ void AccurateRenderer::PresentGL()
     glEnd();
     
     glDisable(GL_TEXTURE_2D);
+#endif
 }
 
 

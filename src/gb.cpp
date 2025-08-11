@@ -53,9 +53,11 @@ static std::string FindPrettyGameName(
 {
     static const int kBufferSize = 1024;
     char nameBuffer[kBufferSize];
-    sprintf(nameBuffer, "%s/names.txt", mediaPath.c_str());
+    sprintf_s(nameBuffer, "%s/names.txt", mediaPath.c_str());
     
-    FILE* file = fopen(nameBuffer, "r");
+    FILE* file = nullptr;
+    if (fopen_s(&file, nameBuffer, "r") != 0)
+        return rawName;
     if( file == NULL )
         return rawName;
         
@@ -103,8 +105,9 @@ void GameBoyState::SetGamePath(const char* path)
     
     // Try to load a ROM from the given path
     _options->inputFileName = path;
-    FILE* file = fopen(_options->inputFileName.c_str(), "rb");
-    if( file == NULL )
+    FILE* file = nullptr;
+    if (fopen_s(&file, _options->inputFileName.c_str(), "rb") != 0
+        || file == nullptr)
     {
         fprintf(stderr, "Failed to open \"%s\"\n", _options->inputFileName.c_str());
         return;
@@ -311,6 +314,7 @@ void GameBoyState::RenderGL( int width, int height )
 
     _gpu->flip = false;
 
+#if 0
     glClearColor(1.0, 1.0, 1.0, 1.0);
     glClearStencil( 0 );
     glClearDepth(1.0f);
@@ -384,6 +388,7 @@ void GameBoyState::RenderGL( int width, int height )
     
         gTakeScreenShot = false;
     }
+#endif
 #endif
 }
 

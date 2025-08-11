@@ -2,6 +2,10 @@
 //
 // png.h
 
+#if 0
+
+// Note: switching from using `libpng` to `stb_image`.
+
 #ifndef GBHD_PNG_H
 #define GBHD_PNG_H
 
@@ -16,6 +20,8 @@
 
 #else
 #error "Unknown Compiler/Platform"
+#endif
+
 #endif
 
 #endif // GBHD_PNG_H

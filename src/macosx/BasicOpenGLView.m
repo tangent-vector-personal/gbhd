@@ -1,4 +1,4 @@
-// Copyright (C) 2011 Tim Foley. All Rights Reserved.
+// Copyright (C) 2011 Theresa Foley. All Rights Reserved.
 //
 // BasicOpenGLView.m
 

@@ -5,6 +5,11 @@
 #ifndef GBHD_OPENGL_H
 #define GBHD_OPENGL_H
 
+#if 0
+
+// Note: switching rendering logic to use something
+// other than OpenGL... exact answer TBD.
+
 #ifdef WIN32
 #include <Windows.h>
 #include <GL/glew.h>
@@ -19,6 +24,8 @@
 
 #ifdef _MSC_VER
 #pragma comment(lib, "glew32.lib")
+#endif
+
 #endif
 
 #endif // GBHD_OPENGL_H
