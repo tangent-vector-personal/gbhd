@@ -125,11 +125,15 @@ Vertex vertexMain(
     sv_position = float4(vertex.position, 0.5, 1.0);
     return vertex;
 }
+Texture2D texImage : register(t0);
+SamplerState samplerState : register(s0);
 float4 fragmentMain(
     Vertex vertex)
     : SV_Target
 {
-    return vertex.color;
+    float4 vertexColor = vertex.color;
+    float4 textureColor = texImage.Sample(samplerState, vertex.texCoord);
+    return textureColor;
 }
 )";
 
@@ -300,17 +304,37 @@ int ensureFullVertexBuffer(int minVertexCount)
     return S_OK;
 }
 
+ComPtr<ID3D11SamplerState> gSamplerState;
+
+int initSamplerState()
+{
+    D3D11_SAMPLER_DESC samplerDesc = {};
+    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+
+    if (FAILED(_d3dDevice->CreateSamplerState(&samplerDesc, gSamplerState.GetAddressOf())))
+    {
+        throw 99;
+    }
+    return S_OK;
+}
+
+
 int initD3D11()
 {
     if (FAILED(CreateDXGIFactory1(IID_PPV_ARGS(&_dxgiFactory))))
         return 1;
+
+    UINT deviceFlags = 0;
+    deviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 
     constexpr D3D_FEATURE_LEVEL deviceFeatureLevel = D3D_FEATURE_LEVEL::D3D_FEATURE_LEVEL_11_0;
     if (FAILED(D3D11CreateDevice(
         nullptr,
         D3D_DRIVER_TYPE_HARDWARE,
         nullptr,
-        0,
+        deviceFlags,
         &deviceFeatureLevel,
         1,
         D3D11_SDK_VERSION,
@@ -367,6 +391,8 @@ int initD3D11()
     initInputLayout();
 
     initSingleTriVertexBuffer();
+
+    initSamplerState();
 
     return 0;
 }
@@ -471,6 +497,58 @@ void handlePlatformEvents()
     }
 }
 
+
+ID3D11ShaderResourceView* ensureTexture(GBTexture* gbTexture)
+{
+    if (gbTexture->backEndState > 0)
+        return (ID3D11ShaderResourceView*) gbTexture->backEndViewPtr;
+
+    DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+    D3D11_TEXTURE2D_DESC resourceDesc = {};
+    resourceDesc.Width = gbTexture->width;
+    resourceDesc.Height = gbTexture->height;
+    resourceDesc.MipLevels = 1;
+    resourceDesc.ArraySize = 1;
+    resourceDesc.Format = format;
+    resourceDesc.SampleDesc.Count = 1;
+    resourceDesc.Usage = D3D11_USAGE_IMMUTABLE;
+    resourceDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = gbTexture->data;
+    initData.SysMemPitch = gbTexture->width * 4;
+
+    ID3D11Texture2D* resource = nullptr;
+    if (FAILED(_d3dDevice->CreateTexture2D(
+        &resourceDesc,
+        &initData,
+        &resource)))
+    {
+        throw 99;
+    }
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
+    viewDesc.Format = format;
+    viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    viewDesc.Texture2D.MipLevels = 1;
+    viewDesc.Texture2D.MostDetailedMip = 0;
+
+    ID3D11ShaderResourceView* view = nullptr;
+    if (FAILED(_d3dDevice->CreateShaderResourceView(
+        resource,
+        &viewDesc,
+        &view)))
+    {
+        throw 99;
+    }
+
+    gbTexture->backEndResourcePtr = resource;
+    gbTexture->backEndViewPtr = view;
+    gbTexture->backEndState = 1;
+    return view;
+}
+
 void simulateAndRenderFrame()
 {
     SDL_Time currentInstant;
@@ -569,7 +647,22 @@ void simulateAndRenderFrame()
             gFullVertexBuffer.GetAddressOf(),
             &vertexStride,
             &vertexOffset);
-        _d3dContext->Draw(renderData.vertexCount, 0);
+
+        _d3dContext->PSSetSamplers(
+            0, 1,
+            gSamplerState.GetAddressOf());
+
+        for (int i = 0; i < renderData.spanCount; ++i)
+        {
+            auto& span = renderData.spans[i];
+            ID3D11ShaderResourceView* texture = ensureTexture(span.texture);
+
+            _d3dContext->PSSetShaderResources(
+                0, 1,
+                &texture);
+
+            _d3dContext->Draw(span.vertexCount, span.startVertex);
+        }
     }
 
     _dxgiSwapChain->Present(1, 0);

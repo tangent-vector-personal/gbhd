@@ -13,9 +13,9 @@ extern "C"
 {
 #endif
 
-    struct GameBoyState;
-
     // C interface
+
+    struct GameBoyState;
 
     struct GBVertex
     {
@@ -24,10 +24,31 @@ extern "C"
         float color[4];
     };
 
+    struct GBTexture
+    {
+        void const* data;
+        int width;
+        int height;
+
+        void* backEndResourcePtr;
+        void* backEndViewPtr;
+        int backEndState;
+    };
+
+    struct GBRenderSpan
+    {
+        GBTexture* texture;
+        int startVertex;
+        int vertexCount;
+    };
+
     struct GBRenderData
     {
         GBVertex const* vertices;
         int vertexCount;
+
+        GBRenderSpan const* spans;
+        int spanCount;
     };
 
     struct GameBoyState* GameBoyState_Create();

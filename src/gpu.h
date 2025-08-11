@@ -39,15 +39,19 @@ public:
 
     void ClearReplacementImage();
 
-    Color pixels[8][8];
+    Color _pixels[8][8];
     
-    uint32_t GetTextureID();
+//    uint32_t GetTextureID();
+
+    GBTexture* getTexture();
     
 private:
     ~TileCacheImage();
 
     uint32_t _referenceCount;
-    uint32_t textureID;
+//    uint32_t textureID;
+
+    GBTexture _texture;
 };
 
 class RectF
@@ -326,6 +330,7 @@ private:
     void DrawSprites( FrameState& frameState, bool priority );
 
     void drawRectangle(
+        GBTexture* texture,
         float sMinX, float sMinY,
         float sMaxX, float sMaxY,
         float tMinX, float tMinY,
@@ -333,14 +338,19 @@ private:
         Color palette);
 
     void drawVertex(
+        GBTexture* texture,
         float sX, float sY,
         float tX, float tY,
         Color palette);
+
+    bool _canExtendCurrentSpan(
+        GBTexture* texture);
 
     FrameState frameStates[2];
     int displayFrameStateIndex;
     int updateFrameStateIndex;
 
+    std::vector<GBRenderSpan> _spans;
     std::vector<GBVertex> _vertices;
 };
 

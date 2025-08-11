@@ -881,7 +881,7 @@ void GPUState::SetLcdMode( LcdMode mode )
 TileCacheImage::TileCacheImage()
     : _referenceCount(1)
 {
-    textureID = 0;
+    _texture = GBTexture{ 0 };
 }
 
 TileCacheImage::~TileCacheImage()
@@ -909,7 +909,13 @@ void TileCacheImage::Release()
 
 void TileCacheImage::SetImageData(int width, int height, const Color* data)
 {
-#if 0
+#if 1
+    _texture.data = data;
+    _texture.width = width;
+    _texture.height = height;
+
+    _texture.backEndState = 0;
+#else
     if( textureID == 0 )
         glGenTextures(1, &textureID);
             
@@ -924,19 +930,19 @@ void TileCacheImage::SetImageData(int width, int height, const Color* data)
 
 void TileCacheImage::ClearReplacementImage()
 {
-    if( textureID != 0 )
+    //if( textureID != 0 )
     {
-        SetImageData(8, 8, &pixels[0][0]);
+        SetImageData(8, 8, &_pixels[0][0]);
     }
 }
 
-uint32_t TileCacheImage::GetTextureID()
+GBTexture* TileCacheImage::getTexture()
 {
-    if( textureID == 0 )
+    if( _texture.data == nullptr )
     {
-        SetImageData(8, 8, &pixels[0][0]);
+        SetImageData(8, 8, &_pixels[0][0]);
     }
-    return textureID;
+    return &_texture;
 }
 
 //
@@ -1042,7 +1048,7 @@ TileCacheNode* GPUState::GetTileCacheNode( TileImageLayer layer, int tileIndex )
                     { { 0, 0, 0, 0 }, { 255, 0, 0, 255}, {0, 255, 0, 255}, {0, 0, 255, 255} },
                 };
                 Color color = kLayerColors[layer][colorIndex];
-                image->pixels[yy][xx] = color;
+                image->_pixels[yy][xx] = color;
             
                 bitToCheck >>= 1;
             }
@@ -1370,6 +1376,7 @@ void DefaultRenderer::Present(GBRenderData& outData)
     }
 
     _vertices.clear();
+    _spans.clear();
 
     // The sequencing here is intended to ensure that when
     // replacement graphics have been provided that include
@@ -1434,6 +1441,9 @@ void DefaultRenderer::Present(GBRenderData& outData)
 
     outData.vertices = _vertices.data();
     outData.vertexCount = (int)_vertices.size();
+
+    outData.spans = _spans.data();
+    outData.spanCount = (int)_spans.size();
 
 #if 0
     glDisable(GL_DEPTH_TEST);
@@ -1587,6 +1597,7 @@ void DefaultRenderer::DrawTileMap( TileMapState* tileMap, TileImageLayer layer )
             // the vertices we want to add to the output.
 
             drawRectangle(
+                image->getTexture(),
                 sMinX, sMinY,
                 sMaxX, sMaxY,
                 tMinX, tMinY,
@@ -1705,6 +1716,7 @@ void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
             tMaxY = lerp( rect.top, rect.bottom, tMaxY );
 
             drawRectangle(
+                image->getTexture(),
                 sMinX, sMinY,
                 sMaxX, sMaxY,
                 tMinX, tMinY,
@@ -1741,6 +1753,7 @@ void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
 }
 
 void DefaultRenderer::drawRectangle(
+    GBTexture* texture,
     float sMinX, float sMinY,
     float sMaxX, float sMaxY,
     float tMinX, float tMinY,
@@ -1755,21 +1768,36 @@ void DefaultRenderer::drawRectangle(
     drawVertex(sMaxX, sMinY, tMaxX, tMinY, palette);
     */
 
-    drawVertex(sMinX, sMinY, tMinX, tMinY, palette); // 0
-    drawVertex(sMinX, sMaxY, tMinX, tMaxY, palette); // 1
-    drawVertex(sMaxX, sMaxY, tMaxX, tMaxY, palette); // 2
+    drawVertex(texture, sMinX, sMinY, tMinX, tMinY, palette); // 0
+    drawVertex(texture, sMinX, sMaxY, tMinX, tMaxY, palette); // 1
+    drawVertex(texture, sMaxX, sMaxY, tMaxX, tMaxY, palette); // 2
 
-    drawVertex(sMinX, sMinY, tMinX, tMinY, palette); // extra 0
-    drawVertex(sMaxX, sMaxY, tMaxX, tMaxY, palette); // extra 2
+    drawVertex(texture, sMinX, sMinY, tMinX, tMinY, palette); // extra 0
+    drawVertex(texture, sMaxX, sMaxY, tMaxX, tMaxY, palette); // extra 2
 
-    drawVertex(sMaxX, sMinY, tMaxX, tMinY, palette); // 3
+    drawVertex(texture, sMaxX, sMinY, tMaxX, tMinY, palette); // 3
 }
 
 void DefaultRenderer::drawVertex(
+    GBTexture* texture,
     float sX, float sY,
     float tX, float tY,
     Color palette)
 {
+    if (!_canExtendCurrentSpan(texture))
+    {
+        // okay, we need to begin a new span...
+
+        GBRenderSpan span = { 0 };
+        span.texture = texture;
+        span.startVertex = (int)_vertices.size();
+        span.vertexCount = 0;
+        _spans.push_back(span);
+    }
+
+    auto& span = _spans.back();
+    span.vertexCount++;
+
     sX /= 160.0f;
     sY /= 144.0f;
 
@@ -1790,6 +1818,19 @@ void DefaultRenderer::drawVertex(
     vertex.color[3] = palette.a / 255.0f;
 
     _vertices.push_back(vertex);
+}
+
+bool DefaultRenderer::_canExtendCurrentSpan(
+    GBTexture* texture)
+{
+    if (_spans.size() == 0)
+        return false;
+
+    auto& _span = _spans.back();
+    if (_span.texture != texture)
+        return false;
+
+    return true;
 }
 
 
