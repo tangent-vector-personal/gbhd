@@ -4,6 +4,7 @@
 #ifndef gbemu_gpu_h
 #define gbemu_gpu_h
 
+#include "gb.h"
 #include "memory.h"
 #include "options.h"
 #include "types.h"
@@ -240,7 +241,7 @@ public:
     
     virtual void Swap() = 0;
 
-    virtual void Present() = 0;
+    virtual void Present(GBRenderData& outData) = 0;
     
     enum
     {
@@ -280,7 +281,7 @@ public:
     
     virtual void Swap();
         
-    virtual void Present();    
+    virtual void Present(GBRenderData& outData);
 
 private:
     enum { kMaxVisibleTilesPerLine = 21 };
@@ -323,10 +324,24 @@ private:
     
     void DrawTileMap( TileMapState* tileMap, TileImageLayer layer );
     void DrawSprites( FrameState& frameState, bool priority );
-    
+
+    void drawRectangle(
+        float sMinX, float sMinY,
+        float sMaxX, float sMaxY,
+        float tMinX, float tMinY,
+        float tMaxX, float tMaxY,
+        Color palette);
+
+    void drawVertex(
+        float sX, float sY,
+        float tX, float tY,
+        Color palette);
+
     FrameState frameStates[2];
     int displayFrameStateIndex;
     int updateFrameStateIndex;
+
+    std::vector<GBVertex> _vertices;
 };
 
 class SimpleRenderer :
@@ -343,7 +358,7 @@ public:
     
     virtual void Swap();
         
-    virtual void Present();    
+    virtual void Present(GBRenderData& outData);
 
 private:
     struct TileMapState
@@ -399,7 +414,7 @@ public:
     
     virtual void Swap();
         
-    virtual void Present();    
+    virtual void Present(GBRenderData& outData);
 
     struct SpriteInfo
     {
@@ -430,7 +445,7 @@ public:
     
     virtual void Swap();
         
-    virtual void Present();    
+    virtual void Present(GBRenderData& outData);
 
 private:
     typedef std::vector<IRenderer*> RendererList;

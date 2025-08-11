@@ -9,6 +9,59 @@
 #include "types.h"
 
 #ifdef __cplusplus
+extern "C"
+{
+#endif
+
+    struct GameBoyState;
+
+    // C interface
+
+    struct GBVertex
+    {
+        float position[2];
+        float texCoord[2];
+        float color[4];
+    };
+
+    struct GBRenderData
+    {
+        GBVertex const* vertices;
+        int vertexCount;
+    };
+
+    struct GameBoyState* GameBoyState_Create();
+    void GameBoyState_Release(struct GameBoyState* gb);
+
+    void GameBoyState_SetGamePath(struct GameBoyState* gb, const char* path);
+    void GameBoyState_SetMediaPath(struct GameBoyState* gb, const char* path);
+
+    void GameBoyState_Start(struct GameBoyState* gb);
+    void GameBoyState_Stop(struct GameBoyState* gb);
+    void GameBoyState_Reset(struct GameBoyState* gb);
+
+    void GameBoyState_Update(struct GameBoyState* gb, UInt64 absTimeNumer, UInt64 absTimeDenom);
+
+    void GameBoyState_Pause(struct GameBoyState* gb);
+    void GameBoyState_Resume(struct GameBoyState* gb);
+    void GameBoyState_TogglePause(struct GameBoyState* gb);
+
+    void GameBoyState_KeyDown(struct GameBoyState* gb, enum Key key);
+    void GameBoyState_KeyUp(struct GameBoyState* gb, enum Key key);
+
+    GBRenderData GameBoyState_Render(
+        struct GameBoyState* gb
+        /*int width,
+        int height*/);
+
+    void GameBoyState_ToggleRenderer(struct GameBoyState* gb);
+    void GameBoyState_DumpTiles(struct GameBoyState* gb);
+
+#ifdef __cplusplus
+}
+#endif
+
+#ifdef __cplusplus
 
 class Options;
 class MemoryState;
@@ -45,7 +98,7 @@ public:
     void KeyDown(Key key);
     void KeyUp(Key key);
     
-    void Render( int width, int height );
+    void Render(GBRenderData& outData);// int width, int height );
     void ToggleRenderer();
     void DumpTiles();
     
@@ -74,38 +127,6 @@ private:
     UInt64 _pendingCyclesNumer;
     SInt64 _pendingCycles;
 };
-
-extern "C"
-{
-#endif
-
-// C interface
-
-struct GameBoyState* GameBoyState_Create();
-void GameBoyState_Release( struct GameBoyState* gb );
-
-void GameBoyState_SetGamePath( struct GameBoyState* gb, const char* path );
-void GameBoyState_SetMediaPath( struct GameBoyState* gb, const char* path );
-
-void GameBoyState_Start( struct GameBoyState* gb );
-void GameBoyState_Stop( struct GameBoyState* gb );
-void GameBoyState_Reset( struct GameBoyState* gb );
-
-void GameBoyState_Update( struct GameBoyState* gb, UInt64 absTimeNumer, UInt64 absTimeDenom );
-
-void GameBoyState_Pause( struct GameBoyState* gb );
-void GameBoyState_Resume( struct GameBoyState* gb );
-void GameBoyState_TogglePause( struct GameBoyState* gb );
-
-void GameBoyState_KeyDown( struct GameBoyState* gb, enum Key key );
-void GameBoyState_KeyUp( struct GameBoyState* gb, enum Key key );
-
-void GameBoyState_Render( struct GameBoyState* gb, int width, int height );
-void GameBoyState_ToggleRenderer( struct GameBoyState* gb );
-void GameBoyState_DumpTiles( struct GameBoyState* gb );
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif // GBHD_GB_H

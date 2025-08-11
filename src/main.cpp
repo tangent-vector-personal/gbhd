@@ -218,22 +218,15 @@ int initShaders()
     return 0;
 }
 
-struct Vertex
-{
-    float position[2];
-    float texCoord[2];
-    float color[4];
-};
-
 ComPtr<ID3D11InputLayout> gD3DInputLayout;
 
 int initInputLayout()
 {
     D3D11_INPUT_ELEMENT_DESC inputElements[] =
     {
-        { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,       0, offsetof(Vertex, position), D3D11_INPUT_PER_VERTEX_DATA, 0},
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, offsetof(Vertex, texCoord), D3D11_INPUT_PER_VERTEX_DATA, 0},
-        { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(Vertex, color),    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,       0, offsetof(GBVertex, position), D3D11_INPUT_PER_VERTEX_DATA, 0},
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, offsetof(GBVertex, texCoord), D3D11_INPUT_PER_VERTEX_DATA, 0},
+        { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(GBVertex, color),    D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
 
     if (FAILED(_d3dDevice->CreateInputLayout(
@@ -249,11 +242,11 @@ int initInputLayout()
     return S_OK;
 }
 
-ComPtr<ID3D11Buffer> gD3DVertexBuffer;
+ComPtr<ID3D11Buffer> gSingleTriVertexBuffer;
 
-int initVertexBuffer()
+int initSingleTriVertexBuffer()
 {
-    Vertex vertices[] =
+    GBVertex vertices[] =
     {
         { { 0, 0}, {0,0}, { 1, 0, 0, 1}},
         { { 0, 1}, {0,1}, { 0, 1, 0, 1}},
@@ -270,7 +263,36 @@ int initVertexBuffer()
     if (FAILED(_d3dDevice->CreateBuffer(
         &bufferDesc,
         &initData,
-        &gD3DVertexBuffer)))
+        &gSingleTriVertexBuffer)))
+    {
+        std::cout << "D3D11: Failed to create triangle vertex buffer\n";
+        return E_FAIL;
+    }
+    return S_OK;
+}
+
+ComPtr<ID3D11Buffer> gFullVertexBuffer;
+int gFullVertexCount = 0;
+
+int ensureFullVertexBuffer(int minVertexCount)
+{
+    if (minVertexCount <= gFullVertexCount)
+        return S_OK;
+
+    gFullVertexCount = minVertexCount;
+
+    gFullVertexBuffer.Reset();
+
+    D3D11_BUFFER_DESC bufferDesc = {};
+    bufferDesc.ByteWidth = gFullVertexCount * sizeof(GBVertex);
+    bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+    bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+    if (FAILED(_d3dDevice->CreateBuffer(
+        &bufferDesc,
+        nullptr,
+        &gFullVertexBuffer)))
     {
         std::cout << "D3D11: Failed to create triangle vertex buffer\n";
         return E_FAIL;
@@ -344,7 +366,7 @@ int initD3D11()
     initShaders();
     initInputLayout();
 
-    initVertexBuffer();
+    initSingleTriVertexBuffer();
 
     return 0;
 }
@@ -471,10 +493,10 @@ void simulateAndRenderFrame()
         &windowClientAreaWidth,
         &windowClientAreaHeight);
 
-    GameBoyState_Render(
-        gConsoleState,
-        windowClientAreaWidth,
-        windowClientAreaHeight);
+    auto renderData = GameBoyState_Render(
+        gConsoleState);
+//        windowClientAreaWidth,
+//        windowClientAreaHeight);
 
     D3D11_VIEWPORT viewport = {};
     viewport.TopLeftX = 0;
@@ -502,15 +524,6 @@ void simulateAndRenderFrame()
     _d3dContext->IASetInputLayout(gD3DInputLayout.Get());
     _d3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    UINT vertexStride = sizeof(Vertex);
-    UINT vertexOffset = 0;
-    _d3dContext->IASetVertexBuffers(
-        0,
-        1,
-        gD3DVertexBuffer.GetAddressOf(),
-        &vertexStride,
-        &vertexOffset);
-
     _d3dContext->VSSetShader(
         _vertexShader.Get(),
         nullptr,
@@ -520,7 +533,44 @@ void simulateAndRenderFrame()
         nullptr,
         0);
 
+
+    UINT vertexStride = sizeof(GBVertex);
+    UINT vertexOffset = 0;
+
+    _d3dContext->IASetVertexBuffers(
+        0,
+        1,
+        gSingleTriVertexBuffer.GetAddressOf(),
+        &vertexStride,
+        &vertexOffset);
     _d3dContext->Draw(3, 0);
+
+    if (renderData.vertexCount > 0)
+    {
+        ensureFullVertexBuffer(renderData.vertexCount);
+
+        D3D11_MAPPED_SUBRESOURCE mapped;
+        if (FAILED(_d3dContext->Map(gFullVertexBuffer.Get(),
+            0,
+            D3D11_MAP_WRITE_DISCARD,
+            0,
+            &mapped)))
+        {
+            throw 99;
+        }
+
+        memcpy(mapped.pData, renderData.vertices, renderData.vertexCount * sizeof(GBVertex));
+
+        _d3dContext->Unmap(gFullVertexBuffer.Get(), 0);
+
+        _d3dContext->IASetVertexBuffers(
+            0,
+            1,
+            gFullVertexBuffer.GetAddressOf(),
+            &vertexStride,
+            &vertexOffset);
+        _d3dContext->Draw(renderData.vertexCount, 0);
+    }
 
     _dxgiSwapChain->Present(1, 0);
 

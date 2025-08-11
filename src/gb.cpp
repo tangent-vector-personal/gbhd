@@ -301,7 +301,8 @@ void GameBoyState::KeyUp(Key key)
     _pad->KeyUp(key);
 }
 
-void GameBoyState::Render( int width, int height )
+void GameBoyState::Render(GBRenderData& outData)
+//int width, int height )
 {
     switch( _mode )
     {
@@ -314,6 +315,8 @@ void GameBoyState::Render( int width, int height )
 
     _gpu->flip = false;
 
+#if 0
+    // TODO: this stuff needs a place to live...
     static const float kNativeAspectRatio =
         (float)kNativeScreenWidth / (float)kNativeScreenHeight;
     float currentAspectRatio =
@@ -332,6 +335,7 @@ void GameBoyState::Render( int width, int height )
         float h = kNativeScreenWidth / currentAspectRatio;
         extraH = (h - kNativeScreenHeight) * 0.5f;
     }
+#endif
 
     // If the LCD is disabled, then we want to push a
     // blank frame into the state of the renderer and
@@ -343,7 +347,7 @@ void GameBoyState::Render( int width, int height )
         _renderer->Swap();
     }
 
-    _renderer->Present();
+    _renderer->Present(outData);
 
 #if 0
     glClearColor(1.0, 1.0, 1.0, 1.0);
@@ -496,10 +500,13 @@ void GameBoyState_KeyUp( struct GameBoyState* gb, enum Key key )
     gb->KeyUp(key);
 }
 
-void GameBoyState_Render( struct GameBoyState* gb, int width, int height )
+GBRenderData GameBoyState_Render( struct GameBoyState* gb/*, int width, int height*/)
 {
-    if( gb == NULL ) return;
-    gb->Render(width, height);
+    GBRenderData data = { 0 };
+
+    if( gb == NULL ) return data;
+    gb->Render(data/*width, height*/);
+    return data;
 }
 
 void GameBoyState_ToggleRenderer( struct GameBoyState* gb )

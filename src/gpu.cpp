@@ -1361,13 +1361,15 @@ void DefaultRenderer::Swap()
     std::swap( updateFrameStateIndex, displayFrameStateIndex );
 }
     
-void DefaultRenderer::Present()
+void DefaultRenderer::Present(GBRenderData& outData)
 {
     FrameState& frameState = frameStates[displayFrameStateIndex];
     if (frameState.disabled)
     {
         return;
     }
+
+    _vertices.clear();
 
     // The sequencing here is intended to ensure that when
     // replacement graphics have been provided that include
@@ -1429,6 +1431,9 @@ void DefaultRenderer::Present()
     // Draw the sprites that want to appear in front of the tile maps.
     //
     DrawSprites(frameState, false);
+
+    outData.vertices = _vertices.data();
+    outData.vertexCount = (int)_vertices.size();
 
 #if 0
     glDisable(GL_DEPTH_TEST);
@@ -1581,6 +1586,12 @@ void DefaultRenderer::DrawTileMap( TileMapState* tileMap, TileImageLayer layer )
             // TODO: these properties together define
             // the vertices we want to add to the output.
 
+            drawRectangle(
+                sMinX, sMinY,
+                sMaxX, sMaxY,
+                tMinX, tMinY,
+                tMaxX, tMaxY,
+                state.palette);
 #if 0
             glColor4ubv((GLubyte*) &state.palette);
 
@@ -1693,6 +1704,13 @@ void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
             tMinY = lerp( rect.top, rect.bottom, tMinY );
             tMaxY = lerp( rect.top, rect.bottom, tMaxY );
 
+            drawRectangle(
+                sMinX, sMinY,
+                sMaxX, sMaxY,
+                tMinX, tMinY,
+                tMaxX, tMaxY,
+                state.palette);
+
 #if 0
             glColor4ubv((GLubyte*) &state.palette);
 
@@ -1721,6 +1739,59 @@ void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
 //    glEnable( GL_TEXTURE_2D );
 //    glColor4f(1,1,1,1);
 }
+
+void DefaultRenderer::drawRectangle(
+    float sMinX, float sMinY,
+    float sMaxX, float sMaxY,
+    float tMinX, float tMinY,
+    float tMaxX, float tMaxY,
+    Color palette)
+{
+    // ideal if we had quads:
+    /*
+    drawVertex(sMinX, sMinY, tMinX, tMinY, palette);
+    drawVertex(sMinX, sMaxY, tMinX, tMaxY, palette);
+    drawVertex(sMaxX, sMaxY, tMaxX, tMaxY, palette);
+    drawVertex(sMaxX, sMinY, tMaxX, tMinY, palette);
+    */
+
+    drawVertex(sMinX, sMinY, tMinX, tMinY, palette); // 0
+    drawVertex(sMinX, sMaxY, tMinX, tMaxY, palette); // 1
+    drawVertex(sMaxX, sMaxY, tMaxX, tMaxY, palette); // 2
+
+    drawVertex(sMinX, sMinY, tMinX, tMinY, palette); // extra 0
+    drawVertex(sMaxX, sMaxY, tMaxX, tMaxY, palette); // extra 2
+
+    drawVertex(sMaxX, sMinY, tMaxX, tMinY, palette); // 3
+}
+
+void DefaultRenderer::drawVertex(
+    float sX, float sY,
+    float tX, float tY,
+    Color palette)
+{
+    sX /= 160.0f;
+    sY /= 144.0f;
+
+    sX *= 2.0f;
+    sY *= 2.0f;
+
+    sX -= 1.0f;
+    sY -= 1.0f;
+
+    GBVertex vertex;
+    vertex.position[0] = sX;
+    vertex.position[1] = sY;
+    vertex.texCoord[0] = tX;
+    vertex.texCoord[1] = tY;
+    vertex.color[0] = palette.r / 255.0f;
+    vertex.color[1] = palette.g / 255.0f;
+    vertex.color[2] = palette.b / 255.0f;
+    vertex.color[3] = palette.a / 255.0f;
+
+    _vertices.push_back(vertex);
+}
+
 
 // SimpleRenderer
 
@@ -1894,7 +1965,7 @@ void SimpleRenderer::Swap()
     std::swap( updateFrameStateIndex, displayFrameStateIndex );
 }
     
-void SimpleRenderer::Present()
+void SimpleRenderer::Present(GBRenderData& outData)
 {    
 #if 0
     glColor4f(1,1,1,1);
@@ -2363,7 +2434,7 @@ void AccurateRenderer::Swap()
 #endif
 }
     
-void AccurateRenderer::Present()
+void AccurateRenderer::Present(GBRenderData& outData)
 {
 #if 0
     glEnable(GL_TEXTURE_2D);
@@ -2443,8 +2514,8 @@ void MultiRenderer::Swap()
     }
 }
     
-void MultiRenderer::Present()
+void MultiRenderer::Present(GBRenderData& outData)
 {
     _selectedIndex = (_selectedIndex % _renderers.size());
-    _renderers[_selectedIndex]->Present();
+    _renderers[_selectedIndex]->Present(outData);
 }   
