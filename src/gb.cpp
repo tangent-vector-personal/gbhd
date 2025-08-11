@@ -301,7 +301,7 @@ void GameBoyState::KeyUp(Key key)
     _pad->KeyUp(key);
 }
 
-void GameBoyState::RenderGL( int width, int height )
+void GameBoyState::Render( int width, int height )
 {
     switch( _mode )
     {
@@ -314,24 +314,15 @@ void GameBoyState::RenderGL( int width, int height )
 
     _gpu->flip = false;
 
-#if 0
-    glClearColor(1.0, 1.0, 1.0, 1.0);
-    glClearStencil( 0 );
-    glClearDepth(1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    
     static const float kNativeAspectRatio =
-        (float) kNativeScreenWidth / (float) kNativeScreenHeight;
+        (float)kNativeScreenWidth / (float)kNativeScreenHeight;
     float currentAspectRatio =
-        (float) width / (float) height;
-    
+        (float)width / (float)height;
+
     float extraW = 0.0f;
     float extraH = 0.0f;
-    
-    if( currentAspectRatio > kNativeAspectRatio )
+
+    if (currentAspectRatio > kNativeAspectRatio)
     {
         float w = kNativeScreenHeight * currentAspectRatio;
         extraW = (w - kNativeScreenWidth) * 0.5f;
@@ -341,6 +332,28 @@ void GameBoyState::RenderGL( int width, int height )
         float h = kNativeScreenWidth / currentAspectRatio;
         extraH = (h - kNativeScreenHeight) * 0.5f;
     }
+
+    // If the LCD is disabled, then we want to push a
+    // blank frame into the state of the renderer and
+    // swap it to be the visible frame.
+    //
+    if (!_gpu->TestLcdFlag(GPUState::kLcdFlag_LcdOn))
+    {
+        _renderer->RenderBlankFrame();
+        _renderer->Swap();
+    }
+
+    _renderer->Present();
+
+#if 0
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glClearStencil( 0 );
+    glClearDepth(1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    
     
     glOrtho(
         -extraW, kNativeScreenWidth + extraW,
@@ -483,10 +496,10 @@ void GameBoyState_KeyUp( struct GameBoyState* gb, enum Key key )
     gb->KeyUp(key);
 }
 
-void GameBoyState_RenderGL( struct GameBoyState* gb, int width, int height )
+void GameBoyState_Render( struct GameBoyState* gb, int width, int height )
 {
     if( gb == NULL ) return;
-    gb->RenderGL(width, height);
+    gb->Render(width, height);
 }
 
 void GameBoyState_ToggleRenderer( struct GameBoyState* gb )

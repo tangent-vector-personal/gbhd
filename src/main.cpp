@@ -622,7 +622,7 @@ void simulateAndRenderFrame()
         &windowClientAreaWidth,
         &windowClientAreaHeight);
 
-    GameBoyState_RenderGL(
+    GameBoyState_Render(
         gConsoleState,
         windowClientAreaWidth,
         windowClientAreaHeight);

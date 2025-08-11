@@ -1361,8 +1361,75 @@ void DefaultRenderer::Swap()
     std::swap( updateFrameStateIndex, displayFrameStateIndex );
 }
     
-void DefaultRenderer::PresentGL()
+void DefaultRenderer::Present()
 {
+    FrameState& frameState = frameStates[displayFrameStateIndex];
+    if (frameState.disabled)
+    {
+        return;
+    }
+
+    // The sequencing here is intended to ensure that when
+    // replacement graphics have been provided that include
+    // things like an alpha channel, we can correctly composite
+    // the resulting image.
+    //
+    // Depending on its state, a sprite may render either in
+    // front of or behind the tile maps (background and window),
+    // but even in the case where a sprite is rendered behind
+    // the background, it still shows as effectively in front
+    // of any background pixels that used color #0 from the
+    // background palette.
+    //
+    // Each tile used for tile maps (background or window) is
+    // represented by two different images when doing replacement.
+    // One of those images represents what to show in places
+    // where background color #0 would show through on a real
+    // Game Boy, and the other represents the content to show
+    // that belongs in front of anything that logically goes
+    // behind the background.
+    //
+    // That sounds really complicated, but it really amounts
+    // to saying we have the following layers, from back-most
+    // to front-most:
+    //
+    // * the background layer images for the background tile map
+    // * the background layer images for the window time map
+    // * the sprites with priority set to be behind the tile maps
+    // * the foreground layer images for the background tile map
+    // * the foreground layer images for the window tile map
+    //
+    // There are some additional details to all of this, because of
+    // course there is.
+
+    // Draw background layer images for background tile map.
+    //
+    DrawTileMap(frameState.bgMapStates, kTileImageLayer_Background);
+
+    // Draw background layer images for the window tile map.
+    //
+    // This step will also set up state (stencil, alpha, whatever) so
+    // that any subsequent drawing of the background tile map doesn't
+    // show through for pixels that are covered by the window.
+    //
+    DrawTileMap(frameState.winMapStates, kTileImageLayer_Background);
+
+    // Draw the sprites that want to appear behind the tile maps.
+    //
+    DrawSprites(frameState, true);
+
+    // Draw the foreground layer images for the background tile map.
+    //
+    DrawTileMap(frameState.bgMapStates, kTileImageLayer_Foreground);
+
+    // Draw the foreground layer images for the window tile map.
+    //
+    DrawTileMap(frameState.winMapStates, kTileImageLayer_Foreground);
+
+    // Draw the sprites that want to appear in front of the tile maps.
+    //
+    DrawSprites(frameState, false);
+
 #if 0
     glDisable(GL_DEPTH_TEST);
 
@@ -1437,6 +1504,13 @@ void DefaultRenderer::DrawTileMap( TileMapState* tileMap, TileImageLayer layer )
 {
     TileCacheImage* lastImage = NULL;
 
+    //
+    // TODO(tfoley): Note sure why these loops are nested in this
+    // order. It would seem to make more sense to but the loop
+    // over lines as the outer loop, so that the check for disabled
+    // lines could be done once per line.
+    //
+
     for( int jj = 0; jj < kMaxVisibleTilesPerLine; ++jj )
     {    
         for( int ii = 0; ii < kNativeScreenHeight; ++ii )
@@ -1447,9 +1521,9 @@ void DefaultRenderer::DrawTileMap( TileMapState* tileMap, TileImageLayer layer )
                 
             TileCacheSubImage subImage = state.images[layer][jj];
             TileCacheImage* image = subImage.image;
+#if 0
             if( image != lastImage )
             {
-#if 0
                 if( lastImage != NULL )
                 {
                     glEnd();
@@ -1460,14 +1534,37 @@ void DefaultRenderer::DrawTileMap( TileMapState* tileMap, TileImageLayer layer )
                 lastImage = image;
                 
                 glBegin(GL_QUADS);
-#endif
             }
-            
+#endif
+
+            // In terms of actual GB hardware, we are
+            // about to render to an area that is 8
+            // pixels wide, and 1 pixel tall.
+            //
+            // The actual number of pixels covered by
+            // that rectangle will depend on the
+            // resolution of the output framebuffer
+            // we are rendering into.
+            //
             float sMinX = state.screenPixelMinX + jj*8;
             float sMaxX = state.screenPixelMinX + (jj+1)*8;
             float sMinY = ii;
             float sMaxY = ii + 1;
-            
+
+            //
+            // The source data for that 8x1 rectangle
+            // will come from the tile sub-image (which
+            // could represent original data or
+            // replacement data).
+            //
+            // Similarly to the case above, this is
+            // conceptually a single row from a tile
+            // image of 8x8 pixels, but in our case
+            // the tile image is a sub-rectangle of
+            // a source image that could have almost
+            // any dimensions.
+            //
+
             float tMinX = 0;
             float tMaxX = 1;
             float tMinY = state.tilePixelY / 8.0f;
@@ -1478,6 +1575,11 @@ void DefaultRenderer::DrawTileMap( TileMapState* tileMap, TileImageLayer layer )
             tMaxX = lerp( rect.left, rect.right, tMaxX );
             tMinY = lerp( rect.top, rect.bottom, tMinY );
             tMaxY = lerp( rect.top, rect.bottom, tMaxY );
+
+            auto palette = state.palette;
+
+            // TODO: these properties together define
+            // the vertices we want to add to the output.
 
 #if 0
             glColor4ubv((GLubyte*) &state.palette);
@@ -1497,12 +1599,12 @@ void DefaultRenderer::DrawTileMap( TileMapState* tileMap, TileImageLayer layer )
         }
     }
 
+#if 0
     if( lastImage != NULL )
     {
-#if 0
         glEnd();
-#endif
     }
+#endif
 }
 
 void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
@@ -1512,6 +1614,11 @@ void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
 
 //    glEnable(GL_BLEND);
 //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // TODO(tfoley): Why are these loops organized like this?
+    // I guess it is to hopefully group together draws that
+    // use the same texture image as one another.
+
     for( int ii = 0; ii < 40; ++ii )
     {
         TileCacheImage* lastImage = NULL;
@@ -1521,13 +1628,13 @@ void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
             const SpriteState& state = frameState.spriteStates[ii][jj];
             if( !state.visible || (state.priority != priority))
             {
+#if 0
                 if( lastImage != NULL )
                 {
-#if 0
                     glEnd();
-#endif
                     lastImage = NULL;
                 }
+#endif
                 continue;
             }
             
@@ -1535,6 +1642,7 @@ void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
             TileCacheSubImage subImage = state.image;
             TileCacheImage* image = subImage.image;
             
+#if 0
             if( image != lastImage )
             {
                 if( lastImage != NULL )
@@ -1554,6 +1662,7 @@ void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
                 glBegin(GL_QUADS);
 #endif
             }
+#endif
             
             float sMinX = state.screenPixelMinX;
             float sMaxX = state.screenPixelMaxX;
@@ -1600,12 +1709,12 @@ void DefaultRenderer::DrawSprites( FrameState& frameState, bool priority )
             glVertex2f(sMaxX, sMinY);            
 #endif
         }
+#if 0
         if( lastImage != NULL )
         {
-#if 0
             glEnd();
-#endif
         }
+#endif
     }
 //    glDisable(GL_BLEND);
     
@@ -1785,7 +1894,7 @@ void SimpleRenderer::Swap()
     std::swap( updateFrameStateIndex, displayFrameStateIndex );
 }
     
-void SimpleRenderer::PresentGL()
+void SimpleRenderer::Present()
 {    
 #if 0
     glColor4f(1,1,1,1);
@@ -2254,7 +2363,7 @@ void AccurateRenderer::Swap()
 #endif
 }
     
-void AccurateRenderer::PresentGL()
+void AccurateRenderer::Present()
 {
 #if 0
     glEnable(GL_TEXTURE_2D);
@@ -2334,8 +2443,8 @@ void MultiRenderer::Swap()
     }
 }
     
-void MultiRenderer::PresentGL()
+void MultiRenderer::Present()
 {
     _selectedIndex = (_selectedIndex % _renderers.size());
-    _renderers[_selectedIndex]->PresentGL();
+    _renderers[_selectedIndex]->Present();
 }   

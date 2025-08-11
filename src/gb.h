@@ -45,7 +45,7 @@ public:
     void KeyDown(Key key);
     void KeyUp(Key key);
     
-    void RenderGL( int width, int height );
+    void Render( int width, int height );
     void ToggleRenderer();
     void DumpTiles();
     
@@ -100,7 +100,7 @@ void GameBoyState_TogglePause( struct GameBoyState* gb );
 void GameBoyState_KeyDown( struct GameBoyState* gb, enum Key key );
 void GameBoyState_KeyUp( struct GameBoyState* gb, enum Key key );
 
-void GameBoyState_RenderGL( struct GameBoyState* gb, int width, int height );
+void GameBoyState_Render( struct GameBoyState* gb, int width, int height );
 void GameBoyState_ToggleRenderer( struct GameBoyState* gb );
 void GameBoyState_DumpTiles( struct GameBoyState* gb );
 

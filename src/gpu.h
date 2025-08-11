@@ -240,7 +240,7 @@ public:
     
     virtual void Swap() = 0;
 
-    virtual void PresentGL() = 0;
+    virtual void Present() = 0;
     
     enum
     {
@@ -280,7 +280,7 @@ public:
     
     virtual void Swap();
         
-    virtual void PresentGL();    
+    virtual void Present();    
 
 private:
     enum { kMaxVisibleTilesPerLine = 21 };
@@ -343,7 +343,7 @@ public:
     
     virtual void Swap();
         
-    virtual void PresentGL();    
+    virtual void Present();    
 
 private:
     struct TileMapState
@@ -399,7 +399,7 @@ public:
     
     virtual void Swap();
         
-    virtual void PresentGL();    
+    virtual void Present();    
 
     struct SpriteInfo
     {
@@ -430,7 +430,7 @@ public:
     
     virtual void Swap();
         
-    virtual void PresentGL();    
+    virtual void Present();    
 
 private:
     typedef std::vector<IRenderer*> RendererList;
